@@ -1,0 +1,94 @@
+// Контейнер поисковой строки
+.searchContainer {
+    width: 62%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+// Обертка для поля ввода и кнопок
+.searchInputWrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    position: relative;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+
+}
+
+// Иконка лупы
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8% 5%;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+
+  
+
+    svg {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+// Поле ввода
+.searchInput {
+    background: transparent;
+    outline: none;
+    border: 2px solid black;
+
+    color: white;
+    font-size: 2vw;
+    padding:  1%;
+    font-family: inherit;
+
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+        transition: color 0.3s ease;
+    }
+
+    &:focus::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+
+
+
+
+
+
+// Счетчик результатов
+.resultsCounter {
+    color: rgba(255, 255, 255, 0.781);
+    text-align: right;
+    border: 2px solid black;
+
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    backdrop-filter: blur(5px);
+    margin-top: 4px;
+}
+
+
+

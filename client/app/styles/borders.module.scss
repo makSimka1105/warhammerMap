@@ -1,0 +1,62 @@
+.container{
+  position: absolute; 
+  top: 0;
+  left: 0;
+  width: 100%; 
+  height: 100%; 
+  overflow: hidden; 
+  pointer-events: none;
+  z-index: -10;
+
+  .border {
+    width: 100%; 
+    height: 100%; 
+    image-rendering: pixelated;
+    will-change: transform, opacity;
+    object-fit: contain; 
+    transition: all 0.7s ease; 
+    opacity: 0.4; 
+
+  }
+
+  .hidden {
+    opacity: 0;
+  }
+
+
+
+  .segment {
+    image-rendering: pixelated;
+    will-change: transform, opacity;
+    position: absolute;
+    width: 6vw;
+    transition: all 0.7s ease; 
+
+  }
+
+  &-solar {
+    transform: rotate(0deg);
+    top: 58%;
+    left: 26%;
+  }
+  &-obscurus {
+    transform: rotate(-45deg);
+    top: 31%;
+    left: 39%;
+  }
+  &-pacificus {
+    transform: rotate(45deg);
+    top: 34%;
+    left: 15%;
+  }
+  &-tempestus {
+    transform: rotate(-45deg);
+    top: 70%;
+    left: 10%;
+  }
+  &-ultima {
+    transform: rotate(45deg);
+    top: 74%;
+    left: 52%;
+  }
+}

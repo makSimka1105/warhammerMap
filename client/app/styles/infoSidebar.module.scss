@@ -1,0 +1,18 @@
+   
+#infoSidebar {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: column;
+            
+            width: 100%;
+            
+            aspect-ratio: 1 / 1.75;
+            background: no-repeat  center url('/assets/backgrounds/infosidebarBack.png')  ;
+            background-size: contain;
+            background-origin: content-box;
+            image-rendering: pixelated;
+
+}
+

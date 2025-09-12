@@ -1,0 +1,81 @@
+.menuContainer {
+    position: absolute;
+    width: 7vw;
+    top: 0.3%;
+    left: 0.3%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.menuButton {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+    border: none;
+    padding: 0%;
+    margin: 0%;
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1;
+    background: no-repeat center url('/assets/burgerMenu/burger-button.png');
+    background-size: contain;
+    background-origin: content-box;
+    image-rendering: pixelated;
+}
+
+.wrapper {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    margin-top: -22%;
+    aspect-ratio: 1/4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.menuContent {
+    position: absolute;
+    top: 0px;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.menuContentActive {
+    transform: translateY(0);
+}
+
+.menuLink {
+    width: 80%;
+    aspect-ratio: 1 / 1;
+    background-size: 100% 100%;
+    background-origin: content-box;
+    image-rendering: pixelated;
+    background-position: center;
+}
+
+.homeLink {
+    background-image: url('/assets/burgerMenu/burger-home.png');
+}
+
+.searchLink {
+    background-image: url('/assets/burgerMenu/burger-search.png');
+}
+
+.borderLink {
+    background-image: url('/assets/burgerMenu/burger-borders.png');
+}
+
+.adminLink {
+    background-image: url('/assets/burgerMenu/burger-admin.png');
+}

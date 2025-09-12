@@ -1,0 +1,31 @@
+"use client";
+import { authClient } from "@/lib/auth-client";
+import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+
+export function Logout() {
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLogOut = async () => {
+        if (isLoading) return;
+        setIsLoading(true);
+        try {
+            await authClient.signOut();
+            router.push("/login");
+        } catch (e) {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div>
+            <Button onClick={handleLogOut} disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 animate-spin" />}
+                {isLoading ? "Logging out..." : "Logout"}
+            </Button>
+        </div>
+    );
+}

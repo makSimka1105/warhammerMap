@@ -1,0 +1,12 @@
+.upperMenu {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    aspect-ratio: 30;
+    background: no-repeat center url('/assets/backgrounds/upperMenuBack.png');
+    background-size: contain;
+    background-origin: content-box;
+    image-rendering: pixelated;
+}

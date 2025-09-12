@@ -1,0 +1,124 @@
+.upperInfo {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    margin: 4%;
+    width: 64%;
+    height: 27%;
+    aspect-ratio: 185/283;
+    /* background-color: rgba(0, 0, 0, 0.5); */
+
+    .title {
+        height: 15%;
+
+        margin-top: 1%;
+        color: rgb(196, 234, 84);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        .name {
+            margin: 0;
+            font-size: 2.2vw;
+            height: 80%;
+            transition: transform 0.2s ease;
+
+        }
+        .ingamePosition {
+            margin: 0;
+            font-size: 1.4vw;
+        }
+        @media (max-aspect-ratio: 1/1.3) {
+            .name {
+                font-size: 5vw;
+                height: 60%;
+            }
+            .ingamePosition {
+                font-size: 3.5vw;
+            }
+        }
+
+        @media (min-aspect-ratio: 567/349) {
+            .name {
+                font-size: 3.6vh;
+                height: 60%;
+            }
+            .ingamePosition {
+                font-size: 2.5vh;
+            }
+        }
+    }
+    .iconWrapper {
+        /* background-color: rgba(0, 0, 0, 0.5); */
+        width: 100%;
+        height: 42%;
+        .icon {
+            position: absolute;
+            top: 10.7%;
+            left: 41%;
+            width: 17%;
+            transition: transform 0.2s ease;
+        }
+        &:hover {
+            transform: scale(1.1);
+          
+        }
+    }
+    .imageContainer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 46%;
+        margin-left: 9%;
+        margin-right: 11.5%;
+        .imageWrapper {
+            width: 16%;
+            aspect-ratio: 1/1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s ease;
+
+            .imageLabel {
+                position: absolute;
+                opacity: 0;
+            }
+            &:hover {
+                transform: scale(1.1);
+                .imageLabel {
+                    opacity: 1;
+                    text-align: center;
+                    white-space: nowrap;
+                    left: 50%;
+                    top: -25%;
+                    color: rgb(196, 234, 84);
+                    font-size: 1.3vw;
+                    stroke: black;
+                    stroke-width: 2px;
+                    transform: translateX(-50%);
+                    transition: opacity 0.2s ease;
+                }
+            }
+        }
+    }
+}
+
+@media (max-aspect-ratio: 1/1.3) {
+    .name {
+        font-size: 5vw;
+        height: 60%;
+    }
+    .ingamePosition {
+        font-size: 3.5vw;
+    }
+}
+
+@media (min-aspect-ratio: 567/349) {
+    .name {
+        font-size: 3.6vh;
+        height: 60%;
+    }
+    .ingamePosition {
+        font-size: 2.5vh;
+    }
+}
