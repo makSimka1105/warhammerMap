@@ -53,3 +53,4 @@ client/lib/generated/prisma
 server-app/dist/
 server-app/tsconfig.build.tsbuildinfo
 
+trash
