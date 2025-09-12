@@ -5,22 +5,25 @@ import { FileModule } from './files/file.module';
 
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-    
-    imports:[
-        ServeStaticModule.forRoot({
-            rootPath: join(__dirname, '', 'static'),
-            serveRoot: '/static/',
-            
-        }),
-            
-        
-        MongooseModule.forRoot('mongodb+srv://masonbober:bimbimbambam@cluster0.7wgony6.mongodb.net/test?retryWrites=true&w=majority&appName=cluster0', {}),
-        ObjectModule,
-        FileModule
-    ],
-    exports:[ObjectModule,FileModule]
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', '.env.local'],
+    }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '', 'static'),
+      serveRoot: '/static/',
+    }),
+
+    MongooseModule.forRoot(process.env.MONGO_LINK || '', {}),
+    ObjectModule,
+    FileModule,
+  ],
+  exports: [ObjectModule, FileModule],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

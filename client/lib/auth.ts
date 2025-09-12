@@ -32,9 +32,9 @@ export const auth = betterAuth({
         expiresIn: 60 * 60,
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }) => {
-            resend.emails.send({
+            await resend.emails.send({
                 from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_SENDER_ADDRESS}>`,
-                to: [user.email as string],
+                to: [user.email ],
                 subject: "Verify your email",
                 react: VerifyEmail({ username: user.name, verifyUrl:url }),
             });

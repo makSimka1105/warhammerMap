@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./main-app.module";
+import { env } from "process";
 const fs = require('fs-extra');
 const start =async()=>{
     try{
@@ -13,14 +14,17 @@ const start =async()=>{
                 await fs.remove(TEMP_DIR); // Очищаем временную папку
                 console.log('📂 restore: Copied', TEMP_DIR, '→', DIST_STATIC);
             
+                
             }
         }
         await returnStatic()
         app.enableCors({
-            origin: "http://localhost:3000",
-            credentials: true,
+          origin: process.env.ORIGIN || 'http://localhost:3000',
+          credentials: true,
         });
         await app.listen(PORT,()=>{console.log(`server was started on PORT ${PORT}`)})
+        await returnStatic();
+
     }catch(e){
         console.log(e);
     };
