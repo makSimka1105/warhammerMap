@@ -2,21 +2,24 @@
 
 # dependencies
 /node_modules
-/trash
+client/node_modules
+server-app/node_modules
 /.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
-!.yarn/versions
+! .yarn/versions
 
 # testing
 /coverage
+client/coverage
+server-app/coverage
 
-# next.js
-/.next/
-/out/
+# next.js (client)
+client/.next/
+client/out/
 
 # production
 /build
@@ -34,12 +37,19 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 .env.local
+!**/.env.example
 
-# vercel
-.vercel
+# vercel (client)
+client/.vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+client/next-env.d.ts
 
-/lib/generated/prisma
+# prisma generated (client)
+client/lib/generated/prisma
+
+# nestjs server build artifacts
+server-app/dist/
+server-app/tsconfig.build.tsbuildinfo
+
