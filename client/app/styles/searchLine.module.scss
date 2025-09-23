@@ -1,60 +1,43 @@
 // Контейнер поисковой строки
 .searchContainer {
-    width: 62%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+    width: 80%;
 }
 
 // Обертка для поля ввода и кнопок
 .searchInputWrapper {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+    padding-left: 6%;
+    padding-right: 1%;
+    background: center no-repeat url(/assets/tablet/top_bar.png);
+    background-size: contain;
+    background-origin: padding-box;
+    image-rendering: pixelated;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
     position: relative;
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.15);
-    }
-
-
-}
-
-// Иконка лупы
-.searchIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8% 5%;
-    color: rgba(255, 255, 255, 0.7);
-    transition: color 0.3s ease;
-    flex-shrink: 0;
-
-  
-
-    svg {
-        width: 100%;
-        height: 100%;
     }
 }
-
 // Поле ввода
 .searchInput {
     background: transparent;
     outline: none;
-    border: 2px solid black;
-
-    color: white;
+    width: 64%;
+    color: rgb(196, 234, 84);
     font-size: 2vw;
-    padding:  1%;
+    padding: 1.5%;
+    padding-bottom: 3%;
     font-family: inherit;
+    @media (min-aspect-ratio: 567/349) {
+        font-size: 4vh;
+    }
+    @media (max-aspect-ratio: 1/1.3) {
+        font-size: 5vw;
+    }
 
     &::placeholder {
         color: rgba(255, 255, 255, 0.5);
@@ -70,25 +53,68 @@
         cursor: not-allowed;
     }
 }
+.tabSwitcher {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
+    width: 12%;
+    height: 68%;
+    padding-bottom: 1%;
+    padding-left: 0.5%;
+    color: rgb(138, 173, 33);
+}
 
+.tabButton {
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2vw;
+    width: 95%;
+    height: 50%;
+    background: center no-repeat url("/assets/tablet/buttons/not_active.png");
+    background-size: cover;
+    cursor: pointer;
+    @media (max-aspect-ratio: 1/1.3) {
+        font-size: 3.5vw;
+    }
+    @media (min-aspect-ratio: 567/349) {
+        font-size: 3.4vh;
+    }
 
-
-
-
+    &.active {
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2vw;
+        width: 95%;
+        height: 50%;
+        background:
+            linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)),
+            center no-repeat url("/assets/tablet/buttons/pressed.png");
+        background-size: cover;
+        cursor: pointer;
+        @media (max-aspect-ratio: 1/1.3) {
+            font-size: 3.5vw;
+        }
+        @media (min-aspect-ratio: 567/349) {
+            font-size: 3.5vh;
+        }
+    }
+}
 
 // Счетчик результатов
 .resultsCounter {
     color: rgba(255, 255, 255, 0.781);
     text-align: right;
-    border: 2px solid black;
-
-    padding: 4px 8px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
-    backdrop-filter: blur(5px);
-    margin-top: 4px;
+    font-size: 100%;
+    font-size: 2vw;
+    @media (max-aspect-ratio: 1/1.3) {
+        font-size: 3vw;
+    }
+    @media (min-aspect-ratio: 567/349) {
+        font-size: 3vh;
+    }
 }
-
-
-

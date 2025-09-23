@@ -16,7 +16,7 @@ export enum BlockChoise{
   dashboard='dashboard',
 }
 export default  function Home() {
-  const [currentBlock,setCurrentBlock]=useState<BlockChoise>(BlockChoise.dashboard)
+  const [currentBlock,setCurrentBlock]=useState<BlockChoise>(BlockChoise.map)
 
   return (
       <div className="outer-container">

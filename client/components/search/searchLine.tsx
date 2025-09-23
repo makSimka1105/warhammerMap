@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useMemo } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks/useStore";
 import { IPlanet } from "@/app/types/Planet";
 import { ILegion } from "@/app/types/legion";
@@ -10,15 +10,24 @@ import {
     setSearchResults,
 } from "@/lib/slices/searchSlices";
 import { TabType } from "./databaseTablet";
+import { TabSwitcher } from "./tabSwitcher";
 
 interface SearchLineProps {
     placeholder?: string;
     className?: string;
+    setActiveTab?: Dispatch<SetStateAction<TabType>>;
+    countPlanets?: number;
+    activeTab:TabType;
+    countLegions?: number;
 }
 
 export function SearchLine({
     placeholder = "Поиск планет и легионов...",
     className = "",
+    activeTab,
+    setActiveTab,
+    countLegions=0,
+    countPlanets=0
 }: SearchLineProps) {
     const dispatch = useAppDispatch();
 
@@ -128,23 +137,6 @@ export function SearchLine({
     return (
         <div className={`${styles.searchContainer} ${className}`}>
             <div className={styles.searchInputWrapper}>
-                {/* Иконка лупы */}
-                <div className={styles.searchIcon}>
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.35-4.35" />
-                    </svg>
-                </div>
-
                 {/* Поле ввода */}
                 <input
                     type="text"
@@ -159,6 +151,8 @@ export function SearchLine({
                         Найдено: {searchResults.length}
                     </div>
                 )}
+
+                <TabSwitcher setActiveTab={setActiveTab!} countLegions={countLegions} countPlanets={countPlanets} activeTab={activeTab} />
             </div>
         </div>
     );

@@ -22,21 +22,15 @@ export default function TabletControls({
         <div className={styles.tabletControls}>
             <div className={styles.buffer}></div>
 
-            <SearchLine placeholder="Поиск..." className="mb-3" />
-            <div>
-                <a
-                    className={styles.tabButton}
-                    onClick={() => setActiveTab(TabType.planets)}
-                >
-                    п({countPlanets})
-                </a>
-                <a
-                    className={styles.tabButton}
-                    onClick={() => setActiveTab(TabType.legions)}
-                >
-                    л({countLegions})
-                </a>
-            </div>
+            <SearchLine
+                placeholder="Поиск..."
+                className=""
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                countPlanets={countPlanets}
+                countLegions={countLegions}
+            />
+           
         </div>
     );
 }

@@ -7,6 +7,8 @@ import { Resend } from "resend";
 import VerifyEmail from "@/components/auth/verify-email";
 
 const resend = new Resend(process.env.RESEND_API_KEY as string);
+
+const { data, error } = await resend.domains.create({ name: "example.com" });
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
@@ -32,12 +34,13 @@ export const auth = betterAuth({
         expiresIn: 60 * 60,
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }) => {
-            await resend.emails.send({
+            const result =await resend.emails.send({
                 from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_SENDER_ADDRESS}>`,
                 to: [user.email ],
                 subject: "Verify your email",
                 react: VerifyEmail({ username: user.name, verifyUrl:url }),
             });
+            console.log(result)
             console.log("email sended TO " + user.email);
         },
     },

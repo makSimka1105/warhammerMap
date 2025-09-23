@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, ObjectId } from "mongoose";
 import { Planet, PlanetDocument } from "./planets.schema";
 import { CreatePlanetDto } from "src/dto/create-planet.dto";
-import { handleInvalidIdError, handleObjNotFound, handleGeneralServerError, handelCheckIfAllGroupsExist, handleGroupsNotValid } from "src/error-holder";
+import { handleInvalidIdError, handleObjNotFound, handleGeneralServerError, handleGroupsNotValid} from "src/error-holder";
 import { Legion,LegionDocument } from "src/legions/legion.schema";
 import { LegionService } from "src/legions/legion.service";
 import { FileService } from "src/files/file.service";

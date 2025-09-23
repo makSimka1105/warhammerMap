@@ -26,7 +26,7 @@
 
             & + .planet-label {
                 opacity: 1;
-                transform: translate(0, 0);
+                transform: translate(0, -20%);
             }
         }
     }
@@ -44,7 +44,7 @@
         background-repeat: no-repeat;
         background-position: center;
         background-size: contain;
-        transform: translate(0, 50%);
+        transform: translate(0, 20%);
         will-change: transform;
 
         width: 100%;

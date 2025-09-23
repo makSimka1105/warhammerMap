@@ -23,7 +23,6 @@ export default function Dashboard() {
     }
 
     const { user } = session;
-
     return (
         <div className="flex flex-col gap-4 items-center justify-center w-full">
             <OnlyNavMenu/>

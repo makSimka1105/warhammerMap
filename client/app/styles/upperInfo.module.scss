@@ -1,6 +1,5 @@
 .upperInfo {
     display: flex;
-    justify-content: center;
     flex-direction: column;
     margin: 4%;
     width: 64%;
@@ -21,27 +20,45 @@
             margin: 0;
             font-size: 2.2vw;
             height: 80%;
-            transition: transform 0.2s ease;
-
+        }
+        .nameLegion {
+            margin: 0;
+            font-size: 2.2vw;
         }
         .ingamePosition {
             margin: 0;
             font-size: 1.4vw;
+            transform: translateY(-10%);
+        }
+        .ingamePositionLegion {
+            margin: 0;
+            font-size: 1.4vw;
+            transform: translateY(-10%);
         }
         @media (max-aspect-ratio: 1/1.3) {
             .name {
                 font-size: 5vw;
                 height: 60%;
+                transform: translateY(-10%);
             }
             .ingamePosition {
                 font-size: 3.5vw;
             }
+            .ingamePositionLegion {
+                margin: 0;
+                font-size: 1.4vw;
+                transform: translateY(-5%);
+            }
+            .nameLegion{
+        font-size: 5vh;
+    }
         }
 
         @media (min-aspect-ratio: 567/349) {
             .name {
                 font-size: 3.6vh;
                 height: 60%;
+                transform: translateY(-10%);
             }
             .ingamePosition {
                 font-size: 2.5vh;
@@ -58,10 +75,9 @@
             left: 41%;
             width: 17%;
             transition: transform 0.2s ease;
-        }
-        &:hover {
-            transform: scale(1.1);
-          
+            &:hover {
+                transform: scale(1.1);
+            }
         }
     }
     .imageContainer {
@@ -81,7 +97,13 @@
 
             .imageLabel {
                 position: absolute;
+                stroke-width: 2px;
                 opacity: 0;
+                //     text-shadow:
+                //         1px 1px 0 #000,
+                //         -1px 1px 0 #000,
+                //         1px -1px 0 #000,
+                //         -1px -1px 0 #000;
             }
             &:hover {
                 transform: scale(1.1);
@@ -90,11 +112,11 @@
                     text-align: center;
                     white-space: nowrap;
                     left: 50%;
-                    top: -25%;
+                    top: 85%;
                     color: rgb(196, 234, 84);
                     font-size: 1.3vw;
-                    stroke: black;
-                    stroke-width: 2px;
+                    text-shadow: #000000 0px 0 6px;
+
                     transform: translateX(-50%);
                     transition: opacity 0.2s ease;
                 }
@@ -111,12 +133,18 @@
     .ingamePosition {
         font-size: 3.5vw;
     }
+    .nameLegion {
+        font-size: 5vw;
+    }
 }
 
 @media (min-aspect-ratio: 567/349) {
     .name {
         font-size: 3.6vh;
         height: 60%;
+    }
+    .nameLegion {
+        font-size: 5vh;
     }
     .ingamePosition {
         font-size: 2.5vh;

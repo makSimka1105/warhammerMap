@@ -54,6 +54,8 @@ interface MapContextType {
     currentLegions: string[];
     setCurrentLegions: React.Dispatch<React.SetStateAction<string[]>>;
 
+    currentPlanet: IPlanet |ILegion| null; // Текущая планета для взаимодействия
+    setCurrentPlanet: React.Dispatch<React.SetStateAction<IPlanet |ILegion| null>>; //
     // dispatch:AppDispatch;
     isVisible: boolean;
     setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
@@ -61,8 +63,6 @@ interface MapContextType {
     setPlanets?: React.Dispatch<React.SetStateAction<IPlanet[]>>; //
     loading?: boolean; // Состояние для загрузки данных
     setLoading?: React.Dispatch<React.SetStateAction<boolean>>; // Функция для установки состояния загрузки
-    currentPlanet: IPlanet | null; // Текущая планета для взаимодействия
-    setCurrentPlanet: React.Dispatch<React.SetStateAction<IPlanet | null>>; //
     scale: number;
     offsetX: number;
     offsetY: number;
@@ -104,7 +104,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({
     const [offsetX, setOffsetX] = useState<number>(0);
     const [offsetY, setOffsetY] = useState<number>(0);
     const [isDragging, setIsDragging] = useState<boolean>(false);
-    const [currentPlanet, setCurrentPlanet] = useState<IPlanet | null>(null); // Текущая планета для взаимодействия
+    const [currentPlanet, setCurrentPlanet] = useState<IPlanet |ILegion | null>(null); // Текущая планета для взаимодействия
 
     const viewerRef = useRef<HTMLDivElement>(null);
     const spaceMapRef = useRef<HTMLDivElement>(null);
@@ -112,7 +112,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({
     const BASE_MAP_SIZE = { width: 2500 };
     const [scaleFactor, setScaleFactor] = useState({ x: 1 });
 
-    const [searchResults,setSearchResults]=useState<SearchResult>()
 
     const clampOffsets = useCallback(
         (

@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+*{
+    /* outline: 1px solid  greenyellow; */
+}
 
 @font-face {
     font-family: "Jersey";
