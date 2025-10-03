@@ -4,6 +4,7 @@ import { useMap } from "@/app/context/mapContext";
 
 import ScrollableBlockColumn from "./ScrollableBlockColumn.tsx";
 import { UpperInfo } from "./upperInfo";
+import { IPlanet } from "@/app/types/Planet.js";
 
 interface InfoSidebarProps {
     children?: React.ReactNode;
@@ -30,6 +31,8 @@ const InfoSidebar: React.FC<InfoSidebarProps> = () => {
                         ? (currentPlanet as any).events
                         : null
                 }
+
+                planetslinks={currentPlanet.planets||null}
             />
         </div>
     );

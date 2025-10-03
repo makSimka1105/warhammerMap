@@ -62,7 +62,7 @@ export function LoginForm({
             }
             toast.success("Signed in successfully.");
             setIsNavigating(true);
-            router.push("/dashboard");
+            router.push("/");
         } catch (e) {
             const error = e as Error;
             toast.error(error.message || "An unknown error occurred.");
@@ -70,7 +70,7 @@ export function LoginForm({
     }
 
     useEffect(() => {
-        if (isNavigating && pathname === "/dashboard") {
+        if (isNavigating && pathname === "/") {
             setIsNavigating(false);
         }
     }, [isNavigating, pathname]);
@@ -82,6 +82,7 @@ export function LoginForm({
                     <CardTitle>Login to your account</CardTitle>
                     <CardDescription>
                         Enter your email below to login to your account
+                        
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

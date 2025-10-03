@@ -25,7 +25,7 @@ export const UpperInfo: React.FC<{ item: IPlanet | ILegion | null }> = ({
     if (!isPlanet(item)) {
         return (
             <div className={styles.upperInfo}>
-                <div className={styles.title }>
+                <div className={styles.title}>
                     <p className={styles.nameLegion}>{item.name}</p>
                 </div>
                 <div className={styles.iconWrapper}>
@@ -76,8 +76,7 @@ export const UpperInfo: React.FC<{ item: IPlanet | ILegion | null }> = ({
                                     id +
                                     ".png"
                                 }
-                                style={{ objectFit: "cover", width: "100%" }}
-                            />
+                                className=" object-cover h-full" />
                             <Label className={styles.imageLabel}>
                                 {getLegionName(planet.legions?.[index] || "")}
                             </Label>

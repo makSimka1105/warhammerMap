@@ -20,7 +20,7 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
         return undefined;
     };
 
-    const { scaleFactor, setCurrentPlanet,  setCurrentLegions } =
+    const { scaleFactor, setCurrentPlanet, setCurrentLegions } =
         useMap();
     const [size, setSize] = useState(100);
     const [left, setLeft] = useState(1000);
@@ -63,7 +63,7 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
         >
             <img
                 className={styles["planet-icon"]}
-                src={"http://localhost:5000/static/" + planet.pic + ".png"}
+                src={`${process.env.NEXT_PUBLIC_ORIGIN_SERVER}/static/` + planet.pic + ".png"}
                 style={{ width: "60%" }}
                 alt={`Planet ${planet.name}`}
             />
@@ -77,19 +77,20 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
             >
                 {planet.name.split(" ").length === 1 ? (
                     <div
+                        className="translate-y-[-0.3em]"
                         style={{ fontSize: `${size * scaleFactor.x * 0.28}px` }}
                     >
                         {planet.name}
                     </div>
                 ) : (
                     <div
-                        id={styles.textWraper}
+                        className="flex flex-col items-center justify-center w-full padding-top-2"
                         style={{
-                            fontSize: `${size * scaleFactor.x * 0.2}px`,
+                            fontSize: `${size * scaleFactor.x * 0.28}px`,
                         }}
                     >
-                        <p id={styles.text}>{planet.name.split(" ")[0]}</p>
-                        <p id={styles.text}>{planet.name.split(" ")[1]}</p>
+                        <p className="leading-none translate-y-[0.2em]  text-center">{planet.name.split(" ")[0]}</p>
+                        <p className="leading-none translate-y-[-0.35em] text-center">{planet.name.split(" ")[1]}</p>
                     </div>
                 )}
                 <div className={styles.wrapper}>

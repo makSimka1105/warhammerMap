@@ -1,5 +1,5 @@
 export interface ILegion{
-            _id?:string;
+            _id:string;
             name: string;
             description?:string;
             icon:string;

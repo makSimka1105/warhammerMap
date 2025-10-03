@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 *{
-    /* outline: 1px solid  greenyellow; */
+    outline: 1px solid  greenyellow;
 }
 
 @font-face {

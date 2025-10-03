@@ -179,7 +179,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\Maksim\\CODDING\\map app project\\nest-app\\client\\prisma\\generated\\prisma",
+      "value": "/home/maksibon/map-app/warhammerMap/client/prisma/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -188,12 +188,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\Maksim\\CODDING\\map app project\\nest-app\\client\\prisma\\schema.prisma",
+    "sourceFilePath": "/home/maksibon/map-app/warhammerMap/client/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

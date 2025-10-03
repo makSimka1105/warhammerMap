@@ -31,7 +31,7 @@ export function TabSwitcher({
                 onClick={() => handleTabClick(TabType.planets)}
                 // type="button"
             >
-                п({countPlanets})
+                ({countPlanets})
             </div>
             <div
                 className={`${styles.tabButton} ${
@@ -40,7 +40,7 @@ export function TabSwitcher({
                 onClick={() => handleTabClick(TabType.legions)}
                 // type="button"
             >
-                л({countLegions})
+                ({countLegions})
             </div>
         </div>
     );

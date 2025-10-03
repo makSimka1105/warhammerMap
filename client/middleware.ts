@@ -20,5 +20,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: [ "/admin","/dashboard"], // Specify the routes the middleware applies to
+    matcher: [ "/dashboard"], // Specify the routes the middleware applies to
 };

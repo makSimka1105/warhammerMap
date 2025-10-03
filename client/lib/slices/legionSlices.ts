@@ -19,8 +19,8 @@ export const fetchLegions = createAsyncThunk(
 // Создание нового легиона
 export const createLegion = createAsyncThunk(
     "legions/createLegion",
-    async (newLegion: Omit<ILegion, "id">): Promise<ILegion> => {
-        const response = await axios.post<ILegion>(userAPI, newLegion);
+    async (newLegion:FormData): Promise<ILegion> => {
+        const response = await axios.post(userAPI, newLegion);
         console.log("легион создан:", response.data);
         return response.data;
     }
@@ -28,16 +28,18 @@ export const createLegion = createAsyncThunk(
 
 // Обновление легиона
 export const updateLegion = createAsyncThunk(
-    "legions/updateLegion",
-    async (updatedLegion: ILegion): Promise<ILegion> => {
-        const response = await axios.put<ILegion>(
-            `${userAPI}/${updatedLegion._id}`,
-            updatedLegion
-        );
-        console.log("легион обновлен:", response.data);
-        return response.data;
-    }
+  "legions/updateLegion",
+  async (payload: { updatedLegion: FormData; id: string }): Promise<ILegion> => {
+    const { updatedLegion, id } = payload;
+    console.log("получены данные лкгиона:", updatedLegion);
+
+    const response = await axios.put<ILegion>(`${userAPI}/${id}`, updatedLegion);
+    console.log("планета обновлена:", response.data);
+    return response.data;
+  }
 );
+
+
 
 // Удаление легиона
 export const deleteLegion = createAsyncThunk(

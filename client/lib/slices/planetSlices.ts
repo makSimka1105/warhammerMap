@@ -1,4 +1,5 @@
 import { IPlanet } from "@/app/types/Planet";
+import { PlanetData } from "@/components/admin/planet/NewPlanetTab";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -18,21 +19,26 @@ export const fetchPlanets = createAsyncThunk(
 
 
 export const createPlanet = createAsyncThunk(
-    "planets/createPlanet",
-    async (newPlanet: Omit<IPlanet, "id">): Promise<IPlanet> => {
-        const response = await axios.post<IPlanet>(userAPI, newPlanet);
-        console.log("планета создана:", response.data);
-        return response.data;
-    }
+  "planets/createPlanet",
+  async (newPlanet: FormData): Promise<IPlanet> => {
+    const response = await axios.post(userAPI, newPlanet)
+    console.log("планета создана:", response.data);
+    return response.data;
+  }
 );
+
 export const updatePlanet = createAsyncThunk(
-    "planets/updatePlanet",
-    async (updatedPlanet: IPlanet): Promise<IPlanet> => {
-        const response = await axios.put<IPlanet>(`${userAPI}/${updatedPlanet._id}`, updatedPlanet);
-        console.log("планета обновлена:", response.data);
-        return response.data;
-    }
+  "planets/updatePlanet",
+  async (payload: { updatedPlanet: FormData; id: string }): Promise<IPlanet> => {
+    const { updatedPlanet, id } = payload;
+    console.log("получены данные планеты:", updatedPlanet);
+
+    const response = await axios.put<IPlanet>(`${userAPI}/${id}`, updatedPlanet);
+    console.log("планета обновлена:", response.data);
+    return response.data;
+  }
 );
+
 
 // Удаление планеты
 export const deletePlanet = createAsyncThunk(

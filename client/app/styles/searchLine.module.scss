@@ -1,6 +1,8 @@
 // Контейнер поисковой строки
 .searchContainer {
     width: 80%;
+            padding-right: 1%;
+    
 }
 
 // Обертка для поля ввода и кнопок
@@ -66,7 +68,7 @@
 }
 
 .tabButton {
-    z-index: 100;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;

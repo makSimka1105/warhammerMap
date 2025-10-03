@@ -67,7 +67,7 @@ export function SignUpForm({
             }
             toast.success("Signed up successfully.");
             setIsNavigating(true);
-            router.push("/dashboard");
+            router.push("/");
         } catch (e) {
             const error = e as Error;
             toast.error(error.message || "An unknown error occurred.");
@@ -75,7 +75,7 @@ export function SignUpForm({
     }
 
     useEffect(() => {
-        if (isNavigating && pathname === "/dashboard") {
+        if (isNavigating && pathname === "/") {
             setIsNavigating(false);
         }
     }, [isNavigating, pathname]);

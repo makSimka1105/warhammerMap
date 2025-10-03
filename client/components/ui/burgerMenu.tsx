@@ -99,9 +99,9 @@ const BurgerMenu: React.FC<BurgerMenuProps> = ({currentBlock,setCurrentBlock}) =
         },
         {
             id: "admin",
-            label: "Navigate to admin dashboard",
-            path: "/dashboard",
-            action: () => handleRouter("/dashboard"),
+            label: "Navigate to login ",
+            path: "/login",
+            action: () => handleRouter("/login"),
         },
     ];
     const menuRef = useOutsideClick(() => setIsActive(false));
