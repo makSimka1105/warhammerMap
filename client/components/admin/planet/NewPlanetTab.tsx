@@ -25,14 +25,15 @@ export const NewPlanetTab: React.FC<NewPlanetTabProps> = ({ initialValues, onSub
     const [values, setValues] = useState<PlanetData>(initialValues);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value, files} = e.target;
+        const { name, value } = e.target;
 
+        // Проверяем, что target - это input и есть files (то есть input type="file")
+        const files = (e.target as HTMLInputElement).files;
 
         setValues(prev => ({
             ...prev,
-            [name]: files ? files[0] : value,
+            [name]: files && files.length > 0 ? files[0] : value,
         }));
-
     };
 
 

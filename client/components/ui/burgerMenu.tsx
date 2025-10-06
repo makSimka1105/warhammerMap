@@ -3,8 +3,12 @@ import React, { useState, useCallback, Dispatch, SetStateAction } from "react";
 import styles from "@/app/styles/burgerMenu.module.scss";
 import { useRouter } from "next/navigation";
 import { useMap } from "@/app/context/mapContext";
-import { BlockChoise } from "@/app/page";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+
+enum BlockChoise {
+  map = 'map',
+  dashboard = 'dashboard',
+}
 
 interface BurgerMenuProps {
     currentBlock: BlockChoise;

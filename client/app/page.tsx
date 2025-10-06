@@ -11,7 +11,7 @@ import { useState } from "react";
 import BurgerMenu from "@/components/ui/burgerMenu";
 
 import DatabaseTablet from "@/components/search/databaseTablet";
-export enum BlockChoise {
+enum BlockChoise {
   map = 'map',
   dashboard = 'dashboard',
 }
