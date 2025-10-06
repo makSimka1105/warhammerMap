@@ -41,7 +41,8 @@ export const auth = betterAuth({
             });
             console.log(result)
             console.log("email sended TO " + user.email);
-       },
+        },
+    },
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
@@ -71,4 +72,4 @@ export const auth = betterAuth({
             adminRoles: ["ADMIN"],
         }),
     ],
-}});
+});

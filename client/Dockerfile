@@ -3,7 +3,7 @@ FROM node:alpine as build
 COPY package.json package.json
 RUN npm install
 COPY . .
-# RUN npm run build
+RUN npm run build
 
 # FROM nginx:stable-alpine
 
@@ -13,4 +13,4 @@ COPY . .
 # CMD [ "nginx", "-g", "daemon off;" ]
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "start"]

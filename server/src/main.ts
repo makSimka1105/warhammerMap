@@ -1,6 +1,5 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./main-app.module";
-import { env } from "process";
 import fs from 'fs-extra';
 const start = async () => {
     try {
@@ -21,12 +20,11 @@ const start = async () => {
         }
         await returnStatic()
         app.enableCors({
-            origin: process.env.ORIGIN, // разрешенный адрес сайта
-            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // разрешенные методы
-            credentials: true, // если нужны куки или заголовки авторизации
+            origin: "http://45.141.76.253", // разрешенный адрес сайта
+            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'// разрешенные методы
         });
 
-        await app.listen(PORT, () => { console.log(`server was started on PORT ${PORT}`) })
+        await app.listen(PORT, () => { console.log(`server was started on  ${PORT}`) })
         await returnStatic();
 
     } catch (e) {
