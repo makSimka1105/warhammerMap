@@ -8,7 +8,6 @@ import VerifyEmail from "@/components/auth/verify-email";
 
 const resend = new Resend(process.env.RESEND_API_KEY as string);
 
-const { data, error } = await resend.domains.create({ name: "example.com" });
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
@@ -42,8 +41,7 @@ export const auth = betterAuth({
             });
             console.log(result)
             console.log("email sended TO " + user.email);
-        },
-    },
+       },
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,

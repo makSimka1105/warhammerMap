@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 // URL вашего API
-const userAPI = "http://localhost:5000/legions";
+const userAPI = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/legions";
 
 // Создание асинхронного thunk для получения данных
 export const fetchLegions = createAsyncThunk(
