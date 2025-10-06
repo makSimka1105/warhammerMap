@@ -5,5 +5,6 @@ export interface IEvent{
             shots?: string[];
             place:string;
             description:string;
+            link:string;
 
 }

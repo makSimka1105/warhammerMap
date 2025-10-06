@@ -76,8 +76,8 @@ export class LegionService {
         try {
             const update = { $pull: { 'planets': objectId } }; // Используем $pull для удаления элемента из массива
             const updatedLegion = await this.legionModel.findByIdAndUpdate(id, update, { new: true, runValidators: true }).exec();
-            console.log(updatedLegion)
-            handleObjNotFound(updatedLegion, id);
+            console.log("после удаления планеты ",updatedLegion)
+            // handleObjNotFound(updatedLegion, id);
             return { id: updatedLegion ? updatedLegion._id.toString() : null };
         } catch (error) {
             handleGeneralServerError(error);

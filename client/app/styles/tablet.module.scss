@@ -32,7 +32,7 @@
         .tabletControls {
             display: flex;
             height: 5vw;
-            justify-content: space-around;
+            justify-content: center;
             padding-top: 0%;
             padding-bottom: 0%;
             padding-left: 15%;
@@ -61,7 +61,8 @@
 
             .planetBar {
                 aspect-ratio: 573/110;
-                height: 22%;
+                // height: 26%;
+                width: 95%;
                 padding: 3%;
                 // gap: -1%;
                 // padding-left: 7%;

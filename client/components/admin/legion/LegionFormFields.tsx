@@ -45,7 +45,6 @@ export const LegionFormFields: React.FC<LegionFormFieldsProps> = ({ values, onCh
           name="icon"
           onChange={onChange}
           accept="image/*"
-          value={undefined}
         />
       </div>
      

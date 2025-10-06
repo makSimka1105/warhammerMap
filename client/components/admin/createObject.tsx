@@ -24,42 +24,72 @@ import { useAppDispatch } from "@/hooks/useStore";
 import { createPlanet, fetchPlanets } from "@/lib/slices/planetSlices";
 import { LegionData, NewLegionTab } from "./legion/NewLegionTab";
 import { createLegion, fetchLegions } from "@/lib/slices/legionSlices";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const initialPlanetData: PlanetData = {
     name: "планета",
     ingamePosition: "в-0000",
     description: "алипов, пере .ю ю .,пщкенгукшцуп.щывсбчпи,ьсмтиттмьсд",
-    left:"1000",
+    left: "1000",
     top: "1000",
     size: "100",
     pic: null,
 };
-const initialLegionData:LegionData={
-    name:"легион",
-    description:"апапрвпа цукенгшщ мпирто мить дж ыва ывакеп вапе мит ю",
-    icon:null,
+const initialLegionData: LegionData = {
+    name: "легион",
+    description: "апапрвпа цукенгшщ мпирто мить дж ыва ывакеп вапе мит ю",
+    icon: null,
 };
 
 export function DrawerWithTabsAndForm() {
     const dispatch = useAppDispatch();
+    const [isOpen, setIsOpen] = useState(false);
 
-    const handleSavePlanets = (formData: FormData) => {
-        console.log("Данные формы в формате form-data:", formData);
-        dispatch(createPlanet(formData));
-        dispatch(fetchPlanets())
+  
+    const handleSavePlanets = async (formData: FormData) => {
+        try {
+            const resultAction = await dispatch(createPlanet(formData));
 
+            if (createPlanet.fulfilled.match(resultAction)) {
+                toast.success("Планета успешно создана");
+                dispatch(fetchPlanets());
+                setIsOpen(false)
+
+
+            } else {
+                // Если ошибка
+                toast.error("Ошибка при создании планеты");
+            }
+        } catch (error) {
+            toast.error("Произошла ошибка сервера при создании ");
+        }
+    }
+    
+    const handleSaveLegions = async (formData: FormData) => {
+        try {
+            const resultAction = await dispatch(createLegion(formData));
+
+            if (createLegion.fulfilled.match(resultAction)) {
+                toast.success("Ордос успешно создана");
+                dispatch(fetchLegions());
+                setIsOpen(false)
+
+            } else {
+                // Если ошибка
+                toast.error("Ошибка при создании ордоса");
+            }
+        } catch (error) {
+            toast.error("Произошла ошибка сервера при создании ");
+        }
     };
-const handleSaveLegions = (formData: FormData) => {
-        console.log("Данные формы в формате form-data:", formData);
-        dispatch(createLegion(formData));
-        dispatch(fetchLegions())
-    };
+    
 
 
 
     return (
-        <Drawer>
-            <DrawerTrigger className=" bg-[url('/assets/tablet/buttons/adding_button.png')] bg-cover  w-[4.5vw] h-[4.5vw]"></DrawerTrigger>
+        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+            <DrawerTrigger className=" bg-[url('/assets/tablet/buttons/adding_button.png')] bg-contain bg-center bg-no-repeat  w-[3.5vw] h-full custom-width"></DrawerTrigger>
 
             <DrawerContent className="flex flex-col h-full">
                 <DrawerHeader>
@@ -71,7 +101,7 @@ const handleSaveLegions = (formData: FormData) => {
                     <Tabs defaultValue="legion" className="flex h-full">
                         <TabsList className="flex flex-col ">
                             <TabsTrigger value="planet" className="text-left">Планета</TabsTrigger>
-                            <TabsTrigger value="legion" className="text-left">Легион</TabsTrigger>
+                            <TabsTrigger value="legion" className="text-left">Ордос</TabsTrigger>
                         </TabsList>
 
                         <div className="flex-1 flex justify-center items-start overflow-y-auto p-6 min-h-0">

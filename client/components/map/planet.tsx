@@ -11,6 +11,7 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
     const { legions, loading } = useAppSelector(
         (state) => state.reducerLegions
     );
+    const {isVisible }=useMap()
 
     const findById = (id: string): string | undefined => {
         if (legions) {
@@ -68,11 +69,14 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
                 alt={`Planet ${planet.name}`}
             />
             <div
+
+
                 className={[
                     planet.name.split(" ").length === 1
                         ? styles.one
                         : styles.two,
                     styles["planet-label"],
+                    `opacity-${isVisible?1:0}`
                 ].join(" ")}
             >
                 {planet.name.split(" ").length === 1 ? (
@@ -93,13 +97,13 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
                         <p className="leading-none translate-y-[-0.35em] text-center">{planet.name.split(" ")[1]}</p>
                     </div>
                 )}
-                <div className={styles.wrapper}>
+                <div className={[styles.wrapper,imgsLegions.length>1?"justify-between":"justify-center"].join(' ')}>
                     {!loading &&
                         imgsLegions.map((link: string, key: number) => (
                             <img
                                 key={key}
-                                src={
-                                    "http://localhost:5000/static/" +
+                                src={process.env.NEXT_PUBLIC_ORIGIN_SERVER+
+                                    "/static/" +
                                     link +
                                     ".png"
                                 }

@@ -6,18 +6,45 @@
     width: 80%;
     height: 62%;
     overflow-y: auto;
-    margin-bottom: 10%;
+    margin-bottom: 11%;
     scroll-behavior: smooth;
 }
 
 .scrollWrapper::-webkit-scrollbar {
-    display: none; /* для Chrome, Safari и Opera */
+    display: none;
+    /* для Chrome, Safari и Opera */
 }
 
 .descriptionTitle,
 .eventTitle {
     font-size: 2.5vw;
     margin-top: 1%;
+    backdrop-filter: blur(5px);
+
+
+
+}
+
+
+.border {
+    box-sizing: content-box;
+    width: 100%;
+    border-top: 0.4vw dashed #333;
+    margin-top: 1vw;
+
+}
+
+.link {
+    margin-bottom: 0%;
+    margin-top: 3%;
+    word-wrap: break-word;
+    // border-bottom: 0.4vw dashed #333;
+    color: #03578e;
+    font-size: 1.8vw;
+    line-height: 1;
+    text-align: justify;
+    hyphens: auto;
+
 }
 
 .planet,
@@ -26,7 +53,7 @@
     margin-bottom: 0%;
     margin-top: 3%;
     word-wrap: break-word;
-    border-bottom: 0.4vw dashed #333;
+    // border-bottom: 0.4vw dashed #333;
     color: #333;
     font-size: 1.8vw;
     line-height: 1;
@@ -37,36 +64,46 @@
 .noData {
     font-size: 1.8vw;
     opacity: 30%;
+
 }
 
 @media (max-aspect-ratio: 1/1.3) {
+
     .descriptionTitle,
     .eventTitle {
         font-size: 8.5vw;
     }
-    
+
     .description,
     .event {
         font-size: 5.8vw;
-        border-bottom: 1.2vw dashed #424241;
     }
-    
+
     .noData {
         font-size: 5.8vw;
+    }
+
+    .border {
+        box-sizing: content-box;
+        width: 100%;
+        border-top: 1.4vw dashed #333;
+        margin-top: 2vw;
+
     }
 }
 
 @media (min-aspect-ratio: 567/349) {
+
     .descriptionTitle,
     .eventTitle {
         font-size: 4.5vh;
     }
-    
+
     .description,
     .event {
         font-size: 3.4vh;
     }
-    
+
     .noData {
         font-size: 3.4vh;
     }

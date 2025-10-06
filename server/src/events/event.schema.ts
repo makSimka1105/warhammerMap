@@ -12,10 +12,12 @@ export class Event {
   description: string;
   @Prop()
   shots: string[];
+  @Prop()
+  link: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Planet' }] })
   place: Types.ObjectId;
-  
+
 
 }
 export const EventSchema = SchemaFactory.createForClass(Event);

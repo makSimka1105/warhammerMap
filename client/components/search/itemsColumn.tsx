@@ -6,7 +6,7 @@ import { LegionBar } from './legionsBar';
 import { PlanetData } from '../admin/planet/NewPlanetTab';
 import { PlanetEditDrawer } from '../admin/planet/editPlanet';
 import { authClient } from '@/lib/auth-client';
-import { deletePlanet, fetchPlanets, updatePlanet } from '@/lib/slices/planetSlices';
+import { createEvent, deletePlanet, fetchPlanets, updatePlanet } from '@/lib/slices/planetSlices';
 import { useAppDispatch } from '@/hooks/useStore';
 import { DeletePlanetDialog } from '../admin/planet/deletePlanet';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import { LegionEditDrawer } from '../admin/legion/editLegion';
 import { DeleteLegionDialog } from '../admin/legion/deleteLegion';
 import { deleteLegion, fetchLegions, updateLegion } from '@/lib/slices/legionSlices';
 import { LegionData } from '../admin/legion/NewLegionTab';
+import { EventCreateDrawer } from '../admin/EventCreateDrawer';
 
 
 
@@ -25,7 +26,9 @@ interface LegionsListProps {
     legions: ILegion[] | null;
 }
 
+
 export function PlanetsList({ planets }: PlanetsListProps) {
+
     const { data: session, isPending } = authClient.useSession();
     const [admin, setAdmin] = useState(false)
     useEffect(() => {
@@ -42,15 +45,19 @@ export function PlanetsList({ planets }: PlanetsListProps) {
     const [deletePlanetId, setDeletePlanetId] = React.useState<string | null>(null);
     const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
 
+
     const openDeleteDialog = (id: string) => {
         setDeletePlanetId(id);
         setIsDeleteOpen(true);
     };
 
+
     const closeDeleteDialog = () => {
         setDeletePlanetId(null);
         setIsDeleteOpen(false);
     };
+
+
 
     const handleDelete = async (id: string) => {
         try {
@@ -72,6 +79,7 @@ export function PlanetsList({ planets }: PlanetsListProps) {
         openDeleteDialog(id)
 
     };
+
     const mapPlanetToPlanetData = (planet: IPlanet): PlanetData => ({
         id: planet._id,
         name: planet.name,
@@ -98,6 +106,7 @@ export function PlanetsList({ planets }: PlanetsListProps) {
         setIsDrawerOpen(false);
     };
 
+
     const handleSave = async (formData: FormData, id: string) => {
         try {
             handleClose();
@@ -116,6 +125,58 @@ export function PlanetsList({ planets }: PlanetsListProps) {
 
         console.log("Сохранить данные:", formData);
     };
+    const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
+    const [eventPlanetId, setEventPlanetId] = useState<string | null>(null);
+
+    const openEventDrawer = (planetId: string) => {
+        setEventPlanetId(planetId);
+        setIsEventDrawerOpen(true);
+        console.log(isEventDrawerOpen)
+    };
+
+    const closeEventDrawer = () => {
+        setEventPlanetId(null);
+        setIsEventDrawerOpen(false);
+        console.log(isEventDrawerOpen)
+
+    };
+
+    const handleSaveEvent = async (formData: FormData) => {
+        try {
+            closeEventDrawer();
+            const resultAction = await dispatch(createEvent(formData));
+            if (createEvent.fulfilled.match(resultAction)) {
+                toast.success("Ивент успешно создан");
+                dispatch(fetchPlanets());
+            } else {
+                toast.error("Ошибка при создании ивента");
+            }
+        } catch (error) {
+            toast.error("Произошла ошибка");
+        }
+    };
+
+
+
+
+    // const handleSaveEvent = async (newEvent: FormData) => {
+    //     try {
+    //         handleClose();
+    //         const resultAction = await dispatch(createEvent(newEvent));
+
+    //         if (createEvent.fulfilled.match(resultAction)) {
+    //             toast.success(
+    //                 "ивент успешно создан");
+    //             dispatch(fetchPlanets());
+    //         } else {
+    //             toast.error("Ошибка при создании ивента");
+    //         }
+    //     } catch (error) {
+    //         toast.error("Произошла ошибка");
+    //     }
+
+    //     console.log("Сохранить данные:", newEvent);
+    // };
 
 
     return (
@@ -124,14 +185,13 @@ export function PlanetsList({ planets }: PlanetsListProps) {
                 planets.map((planet, idx) => (
                     <>
 
-                        <PlanetBar ondelete={handleClickDelete} onclick={handleEditClick} key={planet._id || idx} planet={planet} />
+                        <PlanetBar    onCreateEvent={openEventDrawer} ondelete={handleClickDelete} onclick={handleEditClick} key={planet._id || idx} planet={planet} />
                     </>
                 ))
             ) : (
                 <div>планеты не найдены.</div>
             )}
             {admin && <PlanetEditDrawer
-                key={selectedPlanet?.id}
                 initialData={selectedPlanet}
                 isOpen={isDrawerOpen}
                 onClose={handleClose}
@@ -139,13 +199,19 @@ export function PlanetsList({ planets }: PlanetsListProps) {
             />}
             {admin &&
                 <DeletePlanetDialog
-                    key={selectedPlanet?.id}
 
                     planetId={deletePlanetId}
                     isOpen={isDeleteOpen}
                     onClose={closeDeleteDialog}
                     onDelete={handleDelete}
                 />}
+            {admin && <EventCreateDrawer
+                isOpen={isEventDrawerOpen}
+                onClose={closeEventDrawer}
+                onSave={handleSaveEvent}
+                planetId={eventPlanetId}
+            />}
+
 
         </>
     );

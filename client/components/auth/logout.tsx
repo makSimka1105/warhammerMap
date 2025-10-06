@@ -21,10 +21,9 @@ export function Logout() {
     };
 
     return (
-        <div className="h-[4vw] flex justify-center align-center w-10">
-            <button onClick={handleLogOut} disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 animate-spin" />}
-                {isLoading ? "Logging out..." : <LogOut/>}
+        <div className="h-full w-[3.5vw] bg-[url('/assets/tablet/buttons/logout.png')] bg-contain bg-center bg-no-repeat flex justify-center align-center custom-width ">
+            <button className="w-full" onClick={handleLogOut} disabled={isLoading}>
+
             </button>
         </div>
     );

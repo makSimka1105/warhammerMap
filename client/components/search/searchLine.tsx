@@ -148,7 +148,7 @@ export function SearchLine({
                 />
                 {hasSearchQuery && !isLoading && (
                     <div className={styles.resultsCounter}>
-                        Найдено: {searchResults.length}
+                        Найдено:{searchResults.length}
                     </div>
                 )}
 

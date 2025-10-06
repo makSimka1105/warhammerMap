@@ -40,7 +40,7 @@ export const LegionBar = (
             className={styles.planetBar}
             onClick={() => handleLegionSelecting(legion)}
         >
-            <div className="flex flex-row justify-between w-full h-[100%]">
+            <div className="flex flex-row justify-around w-full h-[100%]">
                 <div className="flex flex-col">
                     <p className={styles.name}>{legion.name}</p>
                     <p className={styles.name}>обьектов-{legion.planets?.length}</p>

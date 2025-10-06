@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import * as fs from 'fs';
-import { Error, ObjectId } from "mongoose";
+import { Error} from "mongoose";
 import * as path from 'path';
 import * as uuid from 'uuid';
 import { rm } from "fs/promises";
@@ -46,7 +46,6 @@ export class FileService {
 
                 // Получаем путь к папке с файлом
                 const folderPath = path.dirname(filePath);
-                console.log(folderPath)
                 const deleted = await rm(folderPath, { recursive: true, force: true });                // const deleted = path.resolve(__dirname, '..', 'static', fileName);
                 // await fs.unlink(deleted + '.png', (err) => {
                 //     if (err) {
@@ -55,7 +54,7 @@ export class FileService {
                 //     }
                 // })
 
-                console.log('файл удален')
+                console.log('файл удален',folderPath)
                 return deleted
             }
         } catch (error) {
@@ -79,19 +78,19 @@ export class FileService {
     }
 
 
-    async updateFile(origFileName: string, newFile) {
-        try {
-            const origFillePath = path.resolve(__dirname, '..', 'static', origFileName);
-            if (!fs.existsSync(origFillePath)) {
-                throw new Error('File updating failed because no original file');
-            }
-            fs.writeFileSync(origFillePath, newFile.buffer)
-            return origFillePath
-        } catch (error) {
-            console.error('Error updating file:', error);
-            throw new Error('File updating failed');
-        }
-    }
+    // async updateFile(origFileName: string, newFile) {
+    //     try {
+    //         const origFillePath = path.resolve(__dirname, '..', 'static', origFileName);
+    //         if (!fs.existsSync(origFillePath)) {
+    //             throw new Error('File updating failed because no original file');
+    //         }
+    //         fs.writeFileSync(origFillePath, newFile.buffer)
+    //         return origFillePath
+    //     } catch (error) {
+    //         console.error('Error updating file:', error);
+    //         throw new Error('File updating failed');
+    //     }
+    // }
 
 
 }

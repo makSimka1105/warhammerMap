@@ -29,7 +29,12 @@
     "@nestjs/serve-static": "^5.0.3",
     "mongoose": "^8.15.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "uuid": "^11.1.0",
+    "mongodb": "^6.18.0",
+    "@auth/mongodb-adapter": "^3.10.0",
+    "@reduxjs/toolkit": "^2.8.2",
+    "ip-utils": "^2.4.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

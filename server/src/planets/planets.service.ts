@@ -98,11 +98,13 @@ export class PlanetService {
             if (planet.pic) {
                 await this.fileService.deleteFile(planet.pic);
             }
+            
             if (planet.events) {
                 await Promise.all(planet.events.map(async link => {
                     await this.eventModel.findByIdAndDelete(link)
                 }))
             }
+            
             // Finally delete the planet itself
             await this.planetModel.findByIdAndDelete(id).exec();
             return { id: planet._id.toString() };
@@ -129,19 +131,19 @@ export class PlanetService {
 
 
 
-    async deleteLegion(id: ObjectId | string, legion: ObjectId | string): Promise<Planet | null> {
-        handleInvalidIdError(id);
-        try {
-            const updatedPlanet = await this.planetModel.findByIdAndUpdate(
-                id,
-                { $pull: { 'legions': legion } },
-                { new: true, runValidators: true })
-            handleObjNotFound(updatedPlanet, id)
-            return updatedPlanet;
-        } catch (error) {
-            handleGeneralServerError(error);
-        }
-    }
+    // async deleteLegion(id: ObjectId | string, legion: ObjectId | string): Promise<Planet | null> {
+    //     handleInvalidIdError(id);
+    //     try {
+    //         const updatedPlanet = await this.planetModel.findByIdAndUpdate(
+    //             id,
+    //             { $pull: { 'legions': legion } },
+    //             { new: true, runValidators: true })
+    //         handleObjNotFound(updatedPlanet, id)
+    //         return updatedPlanet;
+    //     } catch (error) {
+    //         handleGeneralServerError(error);
+    //     }
+    // }
     async updatePlanet(id: string, dto: CreatePlanetDto, pic: Express.Multer.File | null): Promise<Planet> {
         // Найти текущий документ планеты
         const planet = await this.planetModel.findById(id);
@@ -159,8 +161,18 @@ export class PlanetService {
 
         // Обработка легионов из dto
         const legionsToUpdate: string[] = [];
-        if (dto.legion1) legionsToUpdate.push(dto.legion1);
-        if (dto.legion2) legionsToUpdate.push(dto.legion2);
+
+        if (dto.legion1 === "") {
+            // Remove legion1
+        } else if (dto.legion1 !== undefined) {
+            legionsToUpdate.push(dto.legion1);
+        }
+
+        if (dto.legion2 === "") {
+            // Remove legion2
+        } else if (dto.legion2 !== undefined) {
+            legionsToUpdate.push(dto.legion2);
+        }
 
         // Проверить легионы и получить их документы
         const legionInstances = await Promise.all(legionsToUpdate.map(async (legionId) => {
@@ -175,28 +187,28 @@ export class PlanetService {
         const oldLegions = planet.legions.map(id => id.toString());
         for (const legionId of oldLegions) {
             
-                await this.legionService.deletePlanet(legionId, id);
-            
+
+            await this.legionService.deletePlanet(legionId, id);
+            console.log()
+
         }
 
         // Добавить планету в новые легионы, если ещё нет
         for (const legion of legionInstances) {
-            if (!legion.planets.includes(planet._id)) {
                 legion.planets.push(planet._id);
                 await legion.save();
-            }
+            
         }
 
         // Обновить поля планеты
-        planet.name = dto.name;
-        planet.ingamePosition = dto.ingamePosition;
-        planet.description = dto.description;
-        planet.left = dto.left;
-        planet.top = dto.top;
-        planet.size = dto.size;
+        planet.name = dto.name ?? planet.name;
+        planet.ingamePosition = dto.ingamePosition ?? planet.ingamePosition;
+        planet.description = dto.description ?? planet.description;
+        planet.left = dto.left ?? planet.left;
+        planet.top = dto.top ?? planet.top;
+        planet.size = dto.size ?? planet.size;
         planet.pic = picPath;
-        planet.legions = legionsIds;
-
+        planet.legions =  legionsIds ;
         await planet.save();
 
         return planet;

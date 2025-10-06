@@ -33,7 +33,7 @@ export const PlanetFormFields: React.FC<PlanetFormFieldsProps> = ({ values, onCh
         />
       </div>
       <div className="grid gap-3">
-        <Label htmlFor="ingamePosition">Корды</Label>
+        <Label htmlFor="ingamePosition">Корды в игре</Label>
         <Input
           id="ingamePosition"
           name="ingamePosition"
@@ -51,7 +51,7 @@ export const PlanetFormFields: React.FC<PlanetFormFieldsProps> = ({ values, onCh
         />
       </div>
       <div className="grid gap-3">
-        <Label htmlFor="left">Лево</Label>
+        <Label htmlFor="left">Растояние по х</Label>
         <Input
           id="left"
           name="left"
@@ -60,7 +60,7 @@ export const PlanetFormFields: React.FC<PlanetFormFieldsProps> = ({ values, onCh
         />
       </div>
       <div className="grid gap-3">
-        <Label htmlFor="top">Вверх</Label>
+        <Label htmlFor="top">Растояние по у</Label>
         <Input
           id="top"
           name="top"
@@ -96,11 +96,9 @@ export const PlanetFormFields: React.FC<PlanetFormFieldsProps> = ({ values, onCh
           name="legion1"
           // value={legions[0]}
           onChange={onChange}
-          className="input"
-          value={values.legion1} // добавить стили под ваш Input, если нужно
         >
+          {values.legion1 && <option value={values.legion1}>без изменения</option>}
           <option value="">без легиона</option>
-          {values.legion1 && <option value={values.legion1}>текущий легион</option>}
           {legions.map((legion) => (
             <option key={legion._id} value={legion._id}>{legion.name}</option>
           ))}
@@ -113,13 +111,11 @@ export const PlanetFormFields: React.FC<PlanetFormFieldsProps> = ({ values, onCh
           name="legion2"
           // value={legions[0]}
           onChange={onChange}
-          className="input"
-          value={values.legion2} // добавить стили под ваш Input, если нужно
-        // добавить стили под ваш Input, если нужно
+
         >
 
+          {values.legion2 && <option value={values.legion2}>без изменения </option>}
           <option value="">без легиона</option>
-          {values.legion2 && <option value={values.legion2}>текущий легион</option>}
           {legions.map((legion) => (
             <option key={legion._id} value={legion._id}>{legion.name}</option>
           ))}

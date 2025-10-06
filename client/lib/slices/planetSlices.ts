@@ -1,10 +1,12 @@
+import { ILegion } from "@/app/types/legion";
 import { IPlanet } from "@/app/types/Planet";
 import { PlanetData } from "@/components/admin/planet/NewPlanetTab";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 // URL вашего API
-const userAPI = "http://localhost:5000/planets";
+const userAPI = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/planets";
+const userAPI_events = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/events";
 
 // Создание асинхронного thunk для получения данных
 export const fetchPlanets = createAsyncThunk(
@@ -26,6 +28,22 @@ export const createPlanet = createAsyncThunk(
     return response.data;
   }
 );
+export const createEvent = createAsyncThunk(
+  "events/createEvent",
+  async (newEvent: FormData): Promise<ILegion> => {
+    const response = await axios.post(userAPI_events, newEvent)
+    console.log("ивент создан:", response.data);
+    return response.data;
+  }
+);
+export const deleteEvent = createAsyncThunk(
+  "events/deleteEvent",
+  async (id: string): Promise<string | number> => {
+    const response = await axios.delete(userAPI_events+"/"+id)
+    console.log("ивент удален:", response.data);
+    return response.data;
+  }
+);
 
 export const updatePlanet = createAsyncThunk(
   "planets/updatePlanet",
@@ -38,6 +56,8 @@ export const updatePlanet = createAsyncThunk(
     return response.data;
   }
 );
+
+
 
 
 // Удаление планеты
