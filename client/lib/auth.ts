@@ -71,4 +71,4 @@ export const auth = betterAuth({
             adminRoles: ["ADMIN"],
         }),
     ],
-});
+}});
