@@ -1,4 +1,4 @@
-FROM node:alpine as build
+FROM node:20.11.1-slim as build
 
 COPY package.json package.json
 RUN npm install
