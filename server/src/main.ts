@@ -20,7 +20,7 @@ const start = async () => {
         }
         await returnStatic()
         app.enableCors({
-            origin: "http://45.141.76.253", // разрешенный адрес сайта
+            origin: "http://84.54.30.93", // разрешенный адрес сайта
             methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'// разрешенные методы
         });
 
