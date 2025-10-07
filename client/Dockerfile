@@ -1,4 +1,5 @@
 FROM node:20.11.1-slim as build
+WORKDIR /
 
 COPY package.json package.json
 RUN npm install
