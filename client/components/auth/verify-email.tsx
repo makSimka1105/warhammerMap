@@ -61,28 +61,13 @@ const VerifyEmail = (props: VerifyEmailProps) => {
                             <Hr className="border-gray-200 my-[24px]" />
 
                             <Text className="text-[12px] text-gray-500 m-0 leading-[16px]">
-                                Best regards,
-                                <br />
-                                The Team
+                                For the Emperor
+                                
+                                
                             </Text>
                         </Section>
 
-                        <Section className="mt-[32px] pt-[24px] border-t border-gray-200">
-                            <Text className="text-[12px] text-gray-400 m-0 text-center leading-[16px]">
-                                Company Name
-                                <br />
-                                123 Business Street, Suite 100
-                                <br />
-                                City, State 12345
-                            </Text>
-
-                            <Text className="text-[12px] text-gray-400 m-0 text-center mt-[8px] leading-[16px]">
-                                <a href="#" className="text-gray-400 underline">
-                                    Unsubscribe
-                                </a>{" "}
-                                | © 2024 Company Name. All rights reserved.
-                            </Text>
-                        </Section>
+                   
                     </Container>
                 </Body>
             </Tailwind>

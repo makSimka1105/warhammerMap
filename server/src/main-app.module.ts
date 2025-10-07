@@ -19,7 +19,7 @@ import { ConfigModule } from '@nestjs/config';
       serveRoot: '/static/',
     }),
 
-    MongooseModule.forRoot("mongodb+srv://masonbober:bimbimbambam@cluster0.7wgony6.mongodb.net/test?retryWrites=true&w=majority&appName=cluster0", {}),
+    MongooseModule.forRoot(process.env.MONGO_URL||" ", {}),
     ObjectModule,
     FileModule,
   ],
