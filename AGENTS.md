@@ -106,4 +106,4 @@ API changes: run the `smoke-api` skill (`.claude/skills/smoke-api`). Inspect Mon
 
 - Test: Vercel (client, root `client/`, env incl. `API_ORIGIN` before the first build) + Render free (server, `render.yaml`) + MongoDB Atlas M0. Render sleeps after 15 min idle, and the first request takes about a minute.
 - Customer's server: `docker-compose.prod.yml` with root `.env` from `.env.prod.example`. The compose project is pinned to `warhammer-prod`, and `scripts/db-import.sh --compose` targets its mongo service.
-- Moving data: `scripts/db-export.sh '<source uri>' backups/x.archive.gz`, then `scripts/db-import.sh --compose backups/x.archive.gz` (drops and replaces the same collections). Keep the DB name `warhammer` everywhere, or pass source/target DB names to the import script.
+- Moving data: `scripts/db-export.sh '<source uri>' backups/x.archive.gz`, then `scripts/db-import.sh --compose backups/x.archive.gz` (drops and replaces the same collections). Keep the DB name `warhammer` everywhere, or pass source/target DB names to the import script. Backups on the customer's server: `scripts/db-export.sh --compose`.
