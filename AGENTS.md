@@ -75,14 +75,14 @@ Emails listed in `ADMIN_EMAILS` get the `ADMIN` role at sign-up. Admin controls 
 
 Writes are admin-only: the global `AdminGuard` (`server/src/auth/admin.guard.ts`) passes GET/HEAD/OPTIONS and otherwise forwards the request cookie to `{FRONT_URL}/api/auth/get-session`, answering 401 without a session and 403 without the `ADMIN` role. The client must send cookies, so every API call goes through `client/lib/api.ts` (`withCredentials`), never bare `axios`. In production the cookie only reaches Nest if both sit on one site (shared parent domain or a Next rewrite proxy).
 
-Uploads are written to `server/dist/static/`. That is why `nest-cli.json` has `deleteOutDir: false`. Running `rm -rf dist` deletes all uploaded images.
+Uploads go through `imageUploadOptions` (`server/src/files/upload.options.ts`): png/jpeg/webp only (else 400), at most 5 MB (else 413). Files are stored as `static/<category>/<uuid>.<ext>`, and the DB keeps the extension-less `<category>/<uuid>`. Uploads are written to `server/dist/static/`. That is why `nest-cli.json` has `deleteOutDir: false`. Running `rm -rf dist` deletes all uploaded images.
 
 ## Checks
 
-There are no tests yet. Before claiming a change works:
+Server unit tests are jest `*.spec.ts` files next to the code. Before claiming a change works:
 
 ```bash
-cd server && npm run build && npm run lint
+cd server && npm test && npm run build
 cd client && npx tsc --noEmit && npm run lint
 ```
 
@@ -94,10 +94,9 @@ API changes: run the `smoke-api` skill (`.claude/skills/smoke-api`). Inspect Mon
 
 Fix these before building features on top of them:
 
-- **Upload path traversal.** The folder name comes from `dto.name` (`server/src/files/file.service.ts`), and delete removes the whole folder recursively. No size limit or mime filter on uploads either.
 - **No DTO validation.** class-validator and ValidationPipe are not set up.
 - `legion.service.ts` populates a non-existent `objects` path, so `GET /legions/:id` fails.
-- The extension is hardcoded on the client, so a `.jpg` uploaded as a pic shows as broken.
+- The extension is hardcoded on the client (`.png` for pics and icons, `.jpg` for shots), but the server stores the real one. A jpeg/webp pic or a png shot renders broken. The fix is to return the extension in the stored value and drop the client suffix.
 - `main.ts` uses a `fs-extra` default import that resolves to undefined, and the `returnStatic` hack logs an error on every start. Harmless, but delete it.
 - `client/components/sidebar/upperInfo.tsx` hardcodes `http://localhost:5000`.
 - Bad filenames: `ScrollableBlockColumn.tsx.tsx`, `RunningMarquee .tsx` (contains a space), and an empty `inputFileCustom.tsx`.

@@ -1,11 +1,12 @@
 import { BadRequestException, Inject, Injectable, Optional } from "@nestjs/common";
-import { Error} from "mongoose";
 import { promises as fsp } from 'fs';
 import * as path from 'path';
 import * as uuid from 'uuid';
-import { MIME_EXTENSIONS } from "./upload.options";
+import { extensionFor, MIME_EXTENSIONS } from "./upload.options";
 
 export const STATIC_ROOT = 'STATIC_ROOT';
+
+const STORED_NAME = /^(icons|legions|events)\/[0-9a-f-]{36}$/;
 
 @Injectable()
 export class FileService {
@@ -16,7 +17,10 @@ export class FileService {
     }
 
     async uploadFile(file, category: string) {
-        const ext = MIME_EXTENSIONS[file.mimetype];
+        if (!file) {
+            throw new BadRequestException('Image file is required');
+        }
+        const ext = extensionFor(file.mimetype);
         if (!ext) {
             throw new BadRequestException('Unsupported file type');
         }
@@ -37,7 +41,7 @@ export class FileService {
         if (!target.startsWith(this.staticRoot + path.sep)) {
             throw new BadRequestException('Invalid file name');
         }
-        if (fileName.split('/').length !== 2) return;
+        if (!STORED_NAME.test(fileName)) return;
         await Promise.all(Object.values(MIME_EXTENSIONS).map(async (ext) => {
             try {
                 await fsp.unlink(`${target}.${ext}`);
@@ -61,21 +65,4 @@ export class FileService {
         console.log(deletedFiles)
         return deletedFiles
     }
-
-
-    // async updateFile(origFileName: string, newFile) {
-    //     try {
-    //         const origFillePath = path.resolve(__dirname, '..', 'static', origFileName);
-    //         if (!fs.existsSync(origFillePath)) {
-    //             throw new Error('File updating failed because no original file');
-    //         }
-    //         fs.writeFileSync(origFillePath, newFile.buffer)
-    //         return origFillePath
-    //     } catch (error) {
-    //         console.error('Error updating file:', error);
-    //         throw new Error('File updating failed');
-    //     }
-    // }
-
-
 }

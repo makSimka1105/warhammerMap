@@ -63,6 +63,24 @@ describe('FileService', () => {
 
         await expect(fsp.access(path.join(legacyDir, 'abc.png'))).resolves.toBeUndefined();
     });
+
+    it('ignores names outside the known categories', async () => {
+        await fsp.writeFile(path.join(root, 'x.png'), 'root file');
+
+        await service.deleteFile('./x');
+
+        await expect(fsp.access(path.join(root, 'x.png'))).resolves.toBeUndefined();
+    });
+
+    it('rejects a missing file with 400', async () => {
+        await expect(service.uploadFile(undefined, 'icons')).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejects mime types that only exist on Object.prototype', async () => {
+        await expect(service.uploadFile({ mimetype: 'constructor', buffer: Buffer.alloc(0) }, 'icons'))
+            .rejects.toBeInstanceOf(BadRequestException);
+        expect(await fsp.readdir(root)).toEqual([]);
+    });
 });
 
 describe('imageUploadOptions.fileFilter', () => {
@@ -82,6 +100,12 @@ describe('imageUploadOptions.fileFilter', () => {
         const callback = run('application/pdf');
         expect(callback.mock.calls[0][0]).toBeInstanceOf(BadRequestException);
         expect(callback.mock.calls[0][1]).toBe(false);
+    });
+
+    it('rejects prototype keys as mime types', () => {
+        for (const mime of ['constructor', 'toString', '__proto__']) {
+            expect(run(mime).mock.calls[0][1]).toBe(false);
+        }
     });
 
     it('limits files to 5 MB', () => {

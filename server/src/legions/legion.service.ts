@@ -113,10 +113,6 @@ export class LegionService {
                 throw new Error(`Legion with id ${id} not found`);
             }
 
-            if (icon && legion.icon) {
-                await this.fileService.deleteFile(legion.icon);
-            }
-
             // Загрузить новую иконку, если она есть, иначе оставить старую
             const iconPath = icon ? await this.fileService.uploadFile(icon, 'legions') : legion.icon;
 
@@ -135,6 +131,9 @@ export class LegionService {
                 , { new: true, runValidators: true }
             )
             handleObjNotFound(updatedLegion, id)
+            if (icon && legion.icon) {
+                await this.fileService.deleteFile(legion.icon);
+            }
             return updatedLegion;
         } catch (error) {
             handleGeneralServerError(error);

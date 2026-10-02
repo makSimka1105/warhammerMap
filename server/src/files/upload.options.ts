@@ -9,10 +9,14 @@ export const MIME_EXTENSIONS: Record<string, string> = {
     'image/webp': 'webp',
 };
 
+export function extensionFor(mime: string): string | undefined {
+    return Object.hasOwn(MIME_EXTENSIONS, mime) ? MIME_EXTENSIONS[mime] : undefined;
+}
+
 export const imageUploadOptions: MulterOptions = {
     limits: { fileSize: MAX_UPLOAD_BYTES },
     fileFilter: (_req, file, callback) => {
-        if (file.mimetype in MIME_EXTENSIONS) {
+        if (extensionFor(file.mimetype)) {
             callback(null, true);
             return;
         }

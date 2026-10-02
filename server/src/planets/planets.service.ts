@@ -151,11 +151,6 @@ export class PlanetService {
             throw new Error(`Planet with id ${id} not found`);
         }
 
-        // Удалить старую иконку, если есть и передали новую
-        if (pic && planet.pic) {
-            await this.fileService.deleteFile(planet.pic);
-        }
-
         // Загрузить новую иконку, если она есть, иначе оставить старую
         const picPath = pic ? await this.fileService.uploadFile(pic, 'icons') : planet.pic;
 
@@ -207,9 +202,13 @@ export class PlanetService {
         planet.left = dto.left ?? planet.left;
         planet.top = dto.top ?? planet.top;
         planet.size = dto.size ?? planet.size;
-        planet.pic = picPath;
         planet.legions =  legionsIds ;
+        const oldPic = planet.pic;
+        planet.pic = picPath;
         await planet.save();
+        if (pic && oldPic) {
+            await this.fileService.deleteFile(oldPic);
+        }
 
         return planet;
     }
