@@ -3,6 +3,7 @@ import { PlanetService } from "./planets.service";
 import { CreatePlanetDto } from "src/dto/create-planet.dto";
 import { ObjectId } from "mongoose";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { imageUploadOptions } from "src/files/upload.options";
 
 
 @Controller('/planets')
@@ -11,7 +12,7 @@ export class PlanetController {
     @Post()
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'pic', maxCount: 1 },
-    ]))
+    ], imageUploadOptions))
     create(@Body() dto: CreatePlanetDto, @UploadedFiles() files: { pic?: Express.Multer.File[] }) {
         const pic = files.pic ? files.pic[0] : null;
         // const images = files.images;
@@ -42,7 +43,7 @@ export class PlanetController {
 
 
     @Put(':id')
-    @UseInterceptors(FileFieldsInterceptor([{ name: 'pic', maxCount: 1 }]))
+    @UseInterceptors(FileFieldsInterceptor([{ name: 'pic', maxCount: 1 }], imageUploadOptions))
     update(
         @Param('id') id: string, // или ObjectId в зависимости от используемого типа
         @Body() updatePlanetDto: CreatePlanetDto,

@@ -39,7 +39,7 @@ export class PlanetService {
                 return g._id
             }
         })
-        const picPath = await this.fileService.uploadFile(pic, 'icons', dto.name);
+        const picPath = await this.fileService.uploadFile(pic, 'icons');
         const createdPlanet = await this.planetModel.create({
             ...planetData,
             pic: picPath,
@@ -157,7 +157,7 @@ export class PlanetService {
         }
 
         // Загрузить новую иконку, если она есть, иначе оставить старую
-        const picPath = pic ? await this.fileService.uploadFile(pic, 'icons', dto.name) : planet.pic;
+        const picPath = pic ? await this.fileService.uploadFile(pic, 'icons') : planet.pic;
 
         // Обработка легионов из dto
         const legionsToUpdate: string[] = [];

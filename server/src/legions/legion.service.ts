@@ -17,7 +17,7 @@ export class LegionService {
     ) { }
 
     async create(dto: CreateLegionDto, icon): Promise<Legion> {
-        const legionIconPath = await this.fileService.uploadFile(icon, 'legions', dto.name);
+        const legionIconPath = await this.fileService.uploadFile(icon, 'legions');
 
 
         const legion = await this.legionModel.create({
@@ -118,7 +118,7 @@ export class LegionService {
             }
 
             // Загрузить новую иконку, если она есть, иначе оставить старую
-            const iconPath = icon ? await this.fileService.uploadFile(icon, 'legions', dto.name||legion.name) : legion.icon;
+            const iconPath = icon ? await this.fileService.uploadFile(icon, 'legions') : legion.icon;
 
 
 

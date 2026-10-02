@@ -24,7 +24,7 @@ export class EventService {
         let eventShotsPath = [""]
 
         if (shots) {
-            eventShotsPath = await this.fileService.uploadFiles(shots, 'events', dto.name);
+            eventShotsPath = await this.fileService.uploadFiles(shots, 'events');
 
             console.log("путь до файла",eventShotsPath)
         }
