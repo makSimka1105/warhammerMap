@@ -6,36 +6,27 @@ Interactive Warhammer 40k galaxy map for a roleplay community: planets, legions 
 
 ```
 client/   Next.js 15 (App Router) + React 19, Redux Toolkit, better-auth, shadcn/radix, Tailwind 4 + SCSS modules
-server/   NestJS 11 + Mongoose, REST API for planets / legions / events, stores uploaded images on disk
-docker-compose.dev.yml   local MongoDB + PostgreSQL
+server/   NestJS 11 + Mongoose, REST API for planets / legions / events / images
+docker-compose.dev.yml    local MongoDB
+docker-compose.prod.yml   self-hosted stack: mongo + server + client (customer's server)
+render.yaml               Render blueprint for the API (test deploy)
+scripts/db-export.sh, db-import.sh   whole-state backup / restore
 ```
 
-Two databases, on purpose (for now):
+**One MongoDB holds the entire state**, on purpose: planets/legions/events (Nest, mongoose), images in GridFS bucket `images` (Nest), and better-auth's `user`/`session`/`account`/`verification` collections (Next, `mongodbAdapter` in `client/lib/auth.ts`). One `mongodump` moves everything between deployments, so do not introduce a second store (disk uploads, Postgres, S3) without a migration story.
 
-- **PostgreSQL** holds auth only (better-auth tables via Prisma, `client/prisma/schema.prisma`). The Next app talks to it directly, auth lives at `client/app/api/auth/[...all]/route.ts`.
-- **MongoDB** holds the domain data (planets, legions, events), accessed only by `server/`.
-
-The browser calls the Nest API directly at `NEXT_PUBLIC_ORIGIN_SERVER` through axios thunks in `client/lib/slices/*`. Images are served by Nest at `/static/<category>/<name>/<uuid>`, and the client appends the extension itself (`.png` for pics/icons, `.jpg` for event shots).
+Request flow: the browser only talks to Next. Next rewrites `/api/backend/:path*` → `${API_ORIGIN}/:path*` (`client/next.config.ts`), so API calls are same-origin and carry the better-auth cookie. Auth itself is served by Next at `/api/auth/*`.
 
 ## Local setup
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
 
-cd server && npm install && npm run build && npm run start:prod   # :5000
-cd client && npm ci && npx prisma generate && npx prisma db push && npx next dev   # :3000
+cd server && npm ci && npm run build && node dist/main   # :5000, fails fast without MONGO_URL / FRONT_URL
+cd client && npm ci && npx next dev                       # :3000
 ```
 
-`npm run dev` in `client/` does not run `prisma generate` (it is chained after `next dev`), so run it by hand after `npm ci` or any schema change. `server/package-lock.json` is out of sync with `package.json`: use `npm install`, not `npm ci`.
-
-Sign-up requires email verification through Resend. Without a real key, verify the user manually:
-
-```bash
-docker exec warhammermap-postgres-1 psql -U warhammer -d warhammer_auth \
-  -c "UPDATE \"user\" SET \"emailVerified\"=true WHERE email='admin@local.test';"
-```
-
-Emails listed in `ADMIN_EMAILS` get the `ADMIN` role at sign-up. Admin controls in the UI are only shown when `session.user.role === "ADMIN"`.
+With `REQUIRE_EMAIL_VERIFICATION=false`, sign-up logs straight in. Emails listed in `ADMIN_EMAILS` get the `ADMIN` role at sign-up (only at creation, so an existing user keeps its role). Admin controls in the UI come from `useIsAdmin()` (`client/hooks/useIsAdmin.ts`).
 
 ## Environment
 
@@ -43,66 +34,60 @@ Emails listed in `ADMIN_EMAILS` get the `ADMIN` role at sign-up. Admin controls 
 
 | var | value |
 |---|---|
+| `MONGO_URL` | required, `mongodb://localhost:27017/warhammer` |
+| `FRONT_URL` | required, Next origin. Used for CORS and by `AdminGuard` to call `{FRONT_URL}/api/auth/get-session` |
 | `PORT` | default `5000` |
-| `MONGO_URL` | `mongodb://localhost:27017/warhammer` |
-| `FRONT_URL` | exact client origin for CORS, `http://localhost:3000`. If unset, CORS falls back to `*` |
 
 `client/.env`
 
-| var | value |
-|---|---|
-| `NEXT_PUBLIC_ORIGIN_SERVER` | Nest URL without trailing slash. Inlined at build time |
-| `NEON_URL` | Postgres URL, `postgresql://warhammer:warhammer@localhost:5432/warhammer_auth` locally |
-| `BETTER_AUTH_SECRET` | `openssl rand -hex 32` |
-| `BETTER_AUTH_URL` | public URL of the Next app; verification links are built from it |
-| `ADMIN_EMAILS` | `;`-separated |
-| `RESEND_API_KEY`, `EMAIL_SENDER_NAME`, `EMAIL_SENDER_ADDRESS` | Resend sender; needs a verified domain outside of testing |
+| var | when | value |
+|---|---|---|
+| `API_ORIGIN` | build time (rewrites are baked in) | Nest URL, default `http://localhost:5000` |
+| `MONGO_URL` | runtime | same DB as the server |
+| `BETTER_AUTH_SECRET` | runtime | `openssl rand -hex 32` |
+| `BETTER_AUTH_URL` | runtime | public URL of the Next app |
+| `ADMIN_EMAILS` | runtime | `;`-separated |
+| `REQUIRE_EMAIL_VERIFICATION` | runtime | `false` disables verification mails, default on |
+| `RESEND_API_KEY`, `EMAIL_SENDER_NAME`, `EMAIL_SENDER_ADDRESS` | runtime | only needed with verification on; Resend needs a verified domain |
 
-`.env*` is gitignored in both packages. Never commit env files: the old ones are already in the public git history (see "Delete server/.env" commit), so treat those secrets as leaked.
+`.env*` is gitignored in both packages and at the root (root `.env` feeds `docker-compose.prod.yml`, see `.env.prod.example`).
 
 ## API (server)
 
 | method | path | notes |
 |---|---|---|
 | GET/POST | `/planets` | multipart, file field `pic`; `legion1`, `legion2` link legions |
-| GET/PUT/DELETE | `/planets/:id` | |
+| GET/PUT/DELETE | `/planets/:id` | deleting a planet deletes its events and their shots |
 | GET/POST | `/legions` | file field `icon` |
-| GET/PUT/DELETE | `/legions/:id` | `GET /legions/:id` currently 500s, see below |
+| GET/PUT/DELETE | `/legions/:id` | |
 | GET/POST | `/events` | file field `shots` (≤4), `place` = planet id |
 | GET/DELETE | `/events/:id` | no PUT |
 | DELETE | `/planets`, `/legions`, `/events` | wipes the whole collection |
-| GET | `/static/*` | uploaded images |
+| GET | `/files/:name` | image from GridFS, `name` = `<objectId>.<ext>`, immutable cache headers |
 
-Writes are admin-only: the global `AdminGuard` (`server/src/auth/admin.guard.ts`) passes GET/HEAD/OPTIONS and otherwise forwards the request cookie to `{FRONT_URL}/api/auth/get-session`, answering 401 without a session and 403 without the `ADMIN` role. The client must send cookies, so every API call goes through `client/lib/api.ts` (`withCredentials`), never bare `axios`. In production the cookie only reaches Nest if both sit on one site (shared parent domain or a Next rewrite proxy).
+Writes are admin-only: the global `AdminGuard` (`server/src/auth/admin.guard.ts`) passes GET/HEAD/OPTIONS and otherwise forwards the request cookie to `{FRONT_URL}/api/auth/get-session`, answering 401 without a session and 403 without the `ADMIN` role. Every client API call goes through `client/lib/api.ts` (`baseURL: "/api/backend"`, `withCredentials`), never bare `axios`.
 
-Uploads go through `imageUploadOptions` (`server/src/files/upload.options.ts`): png/jpeg/webp only (else 400), at most 5 MB (else 413). Files are stored as `static/<category>/<uuid>.<ext>`, and the DB keeps the extension-less `<category>/<uuid>`. Uploads are written to `server/dist/static/`. That is why `nest-cli.json` has `deleteOutDir: false`. Running `rm -rf dist` deletes all uploaded images.
+DTOs are validated by a global `ValidationPipe` (whitelist + transform); bad ObjectIds in params give 400. Uploads go through `imageUploadOptions` (`server/src/files/upload.options.ts`): png/jpeg/webp only (else 400), at most 4 MB (else 413). The 4 MB limit stays under Vercel's 4.5 MB request body cap. Stored values are `<objectId>.<ext>`, and the client builds URLs with `fileUrl()` (`client/lib/fileUrl.ts`).
 
 ## Checks
 
-Server unit tests are jest `*.spec.ts` files next to the code. Before claiming a change works:
+Before claiming a change works:
 
 ```bash
-cd server && npm test && npm run build
-cd client && npx tsc --noEmit && npm run lint
+cd server && npx --no-install tsc --noEmit && npm test && npm run build   # jest needs the local Mongo
+cd client && npx --no-install tsc --noEmit && npm run build
 ```
 
-`client/next.config.ts` sets `ignoreBuildErrors` and `ignoreDuringBuilds`, so `next build` succeeding proves nothing about types. Run `tsc` explicitly.
+Run `npx tsc` only from inside a package. From the repo root it pulls an unrelated npm package called `tsc`.
 
 API changes: run the `smoke-api` skill (`.claude/skills/smoke-api`). Inspect Mongo data through the read-only `mongodb` MCP server (`.mcp.json`) instead of ad-hoc scripts.
 
 ## Known problems
 
-Fix these before building features on top of them:
-
-- **No DTO validation.** class-validator and ValidationPipe are not set up.
-- `legion.service.ts` populates a non-existent `objects` path, so `GET /legions/:id` fails.
-- The extension is hardcoded on the client (`.png` for pics and icons, `.jpg` for shots), but the server stores the real one. A jpeg/webp pic or a png shot renders broken. The fix is to return the extension in the stored value and drop the client suffix.
-- `main.ts` uses a `fs-extra` default import that resolves to undefined, and the `returnStatic` hack logs an error on every start. Harmless, but delete it.
-- `client/components/sidebar/upperInfo.tsx` hardcodes `http://localhost:5000`.
-- Bad filenames: `ScrollableBlockColumn.tsx.tsx`, `RunningMarquee .tsx` (contains a space), and an empty `inputFileCustom.tsx`.
-- `middleware.ts` only matches `/dashboard`, a route that does not exist.
-- Both Dockerfiles are broken (no `WORKDIR`, no `.dockerignore`, no multi-stage).
-- Dead deps: mongoose/mongodb/`@auth/mongodb-adapter` in client, redux toolkit and auth adapter in server.
+- An upload that succeeds followed by a failed document insert leaves an orphan GridFS file.
+- `client/lib/auth.ts` falls back to `mongodb://localhost:27017/warhammer` when `MONGO_URL` is unset (the docker build has no env), so a misconfigured deployment shows up as a connection error at runtime.
+- `DELETE /planets|/legions|/events` wipe whole collections. They are admin-only, but have no UI and no confirmation.
+- Events have no PUT.
 
 ## Conventions
 
@@ -110,13 +95,15 @@ Fix these before building features on top of them:
 - Styling: SCSS modules in `client/app/styles/` for the map and custom UI, shadcn components in `client/components/ui/`.
 - Server modules follow Nest layout: `<entity>.controller.ts`, `<entity>.service.ts`, `<entity>.schema.ts`, DTOs in `server/src/dto/`.
 - Server code: 4-space indent, single quotes in new files, Nest exceptions (`NotFoundException`, `BadRequestException`, …) instead of `throw Error`, so clients get a real status.
-- Client code: double quotes, function components, API calls only through Redux thunks that use `api` from `client/lib/api.ts`.
+- Client code: double quotes, function components, API calls only through Redux thunks that use `api` from `client/lib/api.ts`, image URLs only through `fileUrl()`.
 - New behaviour comes with a test: `*.spec.ts` next to the server file (jest, `npm test` in `server/`).
 - Keep diffs surgical: touch only what the task needs, leave unrelated formatting alone. Comments explain *why*, in Russian or English.
 - Conventional commits (`feat(server): …`, `fix(client): …`). Do not commit, push or open PRs unless asked.
 
 `.claude/hooks/check-edit.sh` runs after every edit of a `client/` or `server/src/` TS file. It typechecks that package and rejects bare `axios` imports in the client. If the hook fails, fix the error before moving on. Both packages typecheck clean today, so any error is yours.
 
-## Deploy target (planned, $0)
+## Deployments
 
-Vercel (client, root `client/`) + Render free web service (server, root `server/`) + MongoDB Atlas M0 + Neon Postgres + Cloudflare R2 for images (Render disk is ephemeral) + Resend for email. Before the first deploy: move uploads to R2, add API auth, and fix the client build order (`prisma generate && next build`).
+- Test: Vercel (client, root `client/`, env incl. `API_ORIGIN` before the first build) + Render free (server, `render.yaml`) + MongoDB Atlas M0. Render sleeps after 15 min idle, and the first request takes about a minute.
+- Customer's server: `docker-compose.prod.yml` with root `.env` from `.env.prod.example`. The compose project is pinned to `warhammer-prod`, and `scripts/db-import.sh --compose` targets its mongo service.
+- Moving data: `scripts/db-export.sh '<source uri>' backups/x.archive.gz`, then `scripts/db-import.sh --compose backups/x.archive.gz` (drops and replaces the same collections). Keep the DB name `warhammer` everywhere, or pass source/target DB names to the import script.
