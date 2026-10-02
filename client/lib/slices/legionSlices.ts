@@ -1,6 +1,6 @@
 import { ILegion } from "@/app/types/legion";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import { api } from "@/lib/api";
 
 // URL вашего API
 const userAPI = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/legions";
@@ -9,7 +9,7 @@ const userAPI = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/legions";
 export const fetchLegions = createAsyncThunk(
     "legions/fetchLegions",
     async (): Promise<ILegion[]> => {
-        const response = await axios.get<ILegion[]>(userAPI);
+        const response = await api.get<ILegion[]>(userAPI);
         const data = response.data;
         console.log("легионы запрошены:", data);
         return data; // Возвращаем данные для сохранения в хранилище
@@ -20,7 +20,7 @@ export const fetchLegions = createAsyncThunk(
 export const createLegion = createAsyncThunk(
     "legions/createLegion",
     async (newLegion:FormData): Promise<ILegion> => {
-        const response = await axios.post(userAPI, newLegion);
+        const response = await api.post(userAPI, newLegion);
         console.log("легион создан:", response.data);
         return response.data;
     }
@@ -33,7 +33,7 @@ export const updateLegion = createAsyncThunk(
     const { updatedLegion, id } = payload;
     console.log("получены данные лкгиона:", updatedLegion);
 
-    const response = await axios.put<ILegion>(`${userAPI}/${id}`, updatedLegion);
+    const response = await api.put<ILegion>(`${userAPI}/${id}`, updatedLegion);
     console.log("планета обновлена:", response.data);
     return response.data;
   }
@@ -45,7 +45,7 @@ export const updateLegion = createAsyncThunk(
 export const deleteLegion = createAsyncThunk(
     "legions/deleteLegion",
     async (legionId: string | number): Promise<string | number> => {
-        await axios.delete(`${userAPI}/${legionId}`);
+        await api.delete(`${userAPI}/${legionId}`);
         console.log("легион удален:", legionId);
         return legionId;
     }

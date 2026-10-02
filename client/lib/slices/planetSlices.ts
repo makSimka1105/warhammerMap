@@ -2,7 +2,7 @@ import { ILegion } from "@/app/types/legion";
 import { IPlanet } from "@/app/types/Planet";
 import { PlanetData } from "@/components/admin/planet/NewPlanetTab";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import { api } from "@/lib/api";
 
 // URL вашего API
 const userAPI = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/planets";
@@ -12,7 +12,7 @@ const userAPI_events = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/events";
 export const fetchPlanets = createAsyncThunk(
     "planets/fetchPlanets",
     async (): Promise<IPlanet[]> => {
-        const response = await axios.get<IPlanet[]>(userAPI);
+        const response = await api.get<IPlanet[]>(userAPI);
         const data = response.data;
         console.log("планеты запрошены:", data);
         return data; // Возвращаем данные для сохранения в хранилище
@@ -23,7 +23,7 @@ export const fetchPlanets = createAsyncThunk(
 export const createPlanet = createAsyncThunk(
   "planets/createPlanet",
   async (newPlanet: FormData): Promise<IPlanet> => {
-    const response = await axios.post(userAPI, newPlanet)
+    const response = await api.post(userAPI, newPlanet)
     console.log("планета создана:", response.data);
     return response.data;
   }
@@ -31,7 +31,7 @@ export const createPlanet = createAsyncThunk(
 export const createEvent = createAsyncThunk(
   "events/createEvent",
   async (newEvent: FormData): Promise<ILegion> => {
-    const response = await axios.post(userAPI_events, newEvent)
+    const response = await api.post(userAPI_events, newEvent)
     console.log("ивент создан:", response.data);
     return response.data;
   }
@@ -39,7 +39,7 @@ export const createEvent = createAsyncThunk(
 export const deleteEvent = createAsyncThunk(
   "events/deleteEvent",
   async (id: string): Promise<string | number> => {
-    const response = await axios.delete(userAPI_events+"/"+id)
+    const response = await api.delete(userAPI_events+"/"+id)
     console.log("ивент удален:", response.data);
     return response.data;
   }
@@ -51,7 +51,7 @@ export const updatePlanet = createAsyncThunk(
     const { updatedPlanet, id } = payload;
     console.log("получены данные планеты:", updatedPlanet);
 
-    const response = await axios.put<IPlanet>(`${userAPI}/${id}`, updatedPlanet);
+    const response = await api.put<IPlanet>(`${userAPI}/${id}`, updatedPlanet);
     console.log("планета обновлена:", response.data);
     return response.data;
   }
@@ -64,7 +64,7 @@ export const updatePlanet = createAsyncThunk(
 export const deletePlanet = createAsyncThunk(
     "planets/deletePlanet",
     async (planetId: string | number): Promise<string | number> => {
-        await axios.delete(`${userAPI}/${planetId}`);
+        await api.delete(`${userAPI}/${planetId}`);
         console.log("планета удалена:", planetId);
         return planetId;
     }

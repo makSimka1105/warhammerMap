@@ -73,6 +73,8 @@ Emails listed in `ADMIN_EMAILS` get the `ADMIN` role at sign-up. Admin controls 
 | DELETE | `/planets`, `/legions`, `/events` | wipes the whole collection |
 | GET | `/static/*` | uploaded images |
 
+Writes are admin-only: the global `AdminGuard` (`server/src/auth/admin.guard.ts`) passes GET/HEAD/OPTIONS and otherwise forwards the request cookie to `{FRONT_URL}/api/auth/get-session`, answering 401 without a session and 403 without the `ADMIN` role. The client must send cookies, so every API call goes through `client/lib/api.ts` (`withCredentials`), never bare `axios`. In production the cookie only reaches Nest if both sit on one site (shared parent domain or a Next rewrite proxy).
+
 Uploads are written to `server/dist/static/`. That is why `nest-cli.json` has `deleteOutDir: false`. Running `rm -rf dist` deletes all uploaded images.
 
 ## Checks
@@ -92,7 +94,6 @@ API changes: run the `smoke-api` skill (`.claude/skills/smoke-api`). Inspect Mon
 
 Fix these before building features on top of them:
 
-- **No auth on the API.** Every mutating Nest endpoint is public, and admin checks exist only in the client UI. Planned fix: a Nest guard that validates the better-auth session (or a Next proxy route with a shared secret).
 - **Upload path traversal.** The folder name comes from `dto.name` (`server/src/files/file.service.ts`), and delete removes the whole folder recursively. No size limit or mime filter on uploads either.
 - **No DTO validation.** class-validator and ValidationPipe are not set up.
 - `legion.service.ts` populates a non-existent `objects` path, so `GET /legions/:id` fails.

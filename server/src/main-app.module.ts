@@ -6,6 +6,8 @@ import { FileModule } from './files/file.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { AdminGuard } from './auth/admin.guard';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     ObjectModule,
     FileModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: AdminGuard }],
   exports: [ObjectModule, FileModule],
 })
 export class AppModule implements NestModule {
