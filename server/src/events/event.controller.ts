@@ -1,5 +1,6 @@
 import { Controller, Post, UseInterceptors, Body, UploadedFiles, Get, Param, Delete, Put } from "@nestjs/common"
 import { FileFieldsInterceptor } from "@nestjs/platform-express"
+import { imageUploadOptions } from "src/files/upload.options"
 import { ObjectId } from "mongoose"
 import { CreateEventDto } from "src/dto/create-event.dto"
 import { EventService } from "./event.service"
@@ -13,7 +14,7 @@ export class EventController{
    @Post()
       @UseInterceptors(FileFieldsInterceptor([
           { name: 'shots', maxCount: 4 },
-      ]))
+      ], imageUploadOptions))
       create(@Body() dto: CreateEventDto, @UploadedFiles() files: { shots?: Express.Multer.File[]}) {
           const shots = files.shots ? files.shots : null;
           return this.eventService.create(dto, shots)

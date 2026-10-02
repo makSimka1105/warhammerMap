@@ -1,65 +1,54 @@
-import { Injectable } from "@nestjs/common";
-import * as fs from 'fs';
-import { Error} from "mongoose";
+import { BadRequestException, Inject, Injectable, Optional } from "@nestjs/common";
+import { promises as fsp } from 'fs';
 import * as path from 'path';
 import * as uuid from 'uuid';
-import { rm } from "fs/promises";
+import { extensionFor, MIME_EXTENSIONS } from "./upload.options";
 
+export const STATIC_ROOT = 'STATIC_ROOT';
+
+const STORED_NAME = /^(icons|legions|events)\/[0-9a-f-]{36}$/;
 
 @Injectable()
 export class FileService {
+    private readonly staticRoot: string;
 
-    async uploadFile(fille, category: string, folderName: string) {
-        try {
-            const fileExt = fille.originalname.split('.').pop();
-            const filleName = uuid.v4()
-            const fillePath = path.resolve(__dirname, '..', 'static', category, folderName);
-            if (!fs.existsSync(fillePath)) {
-                fs.mkdirSync(fillePath, { recursive: true });
-            }
-            const fullPath = path.resolve(fillePath, `${filleName}.${fileExt}`);
-            fs.writeFileSync(fullPath, fille.buffer)
-            return `${category}/${folderName}/${filleName}`;
-        } catch (error) {
-            console.error('Error uploading file:', error);
-            throw new Error('File upload failed');
-
-        }
-
+    constructor(@Optional() @Inject(STATIC_ROOT) staticRoot?: string) {
+        this.staticRoot = path.resolve(staticRoot ?? path.join(__dirname, '..', 'static'));
     }
 
-    async uploadFiles(filles: [], category: string, folderName: string) {
-        const shotsNames = await Promise.all(filles.map(async (fille) => {
-            return await this.uploadFile(fille, category, folderName)
-        }))
-        console.log(shotsNames)
-        return shotsNames;
+    async uploadFile(file, category: string) {
+        if (!file) {
+            throw new BadRequestException('Image file is required');
+        }
+        const ext = extensionFor(file.mimetype);
+        if (!ext) {
+            throw new BadRequestException('Unsupported file type');
+        }
+        const id = uuid.v4();
+        const dir = path.join(this.staticRoot, category);
+        await fsp.mkdir(dir, { recursive: true });
+        await fsp.writeFile(path.join(dir, `${id}.${ext}`), file.buffer);
+        return `${category}/${id}`;
     }
 
+    async uploadFiles(files: [], category: string) {
+        return Promise.all(files.map((file) => this.uploadFile(file, category)));
+    }
 
-
-
-    async deleteFile(fileName: string | undefined): Promise<string | void> {
-        try {
-            if (fileName) {
-                const filePath = path.resolve(__dirname, '..', 'static', fileName);
-
-                // Получаем путь к папке с файлом
-                const folderPath = path.dirname(filePath);
-                const deleted = await rm(folderPath, { recursive: true, force: true });                // const deleted = path.resolve(__dirname, '..', 'static', fileName);
-                // await fs.unlink(deleted + '.png', (err) => {
-                //     if (err) {
-                //         console.log('Error deleting file:', deleted, err);
-                //         return
-                //     }
-                // })
-
-                console.log('файл удален',folderPath)
-                return deleted
-            }
-        } catch (error) {
-            throw new Error(error)
+    async deleteFile(fileName: string | undefined): Promise<void> {
+        if (!fileName) return;
+        const target = path.resolve(this.staticRoot, fileName);
+        if (!target.startsWith(this.staticRoot + path.sep)) {
+            throw new BadRequestException('Invalid file name');
         }
+        if (!STORED_NAME.test(fileName)) return;
+        await Promise.all(Object.values(MIME_EXTENSIONS).map(async (ext) => {
+            try {
+                await fsp.unlink(`${target}.${ext}`);
+            } catch (error) {
+                if (error.code !== 'ENOENT') throw error;
+            }
+        }));
     }
 
     async deleteFiles(fillesNames: string[] | undefined) {
@@ -76,21 +65,4 @@ export class FileService {
         console.log(deletedFiles)
         return deletedFiles
     }
-
-
-    // async updateFile(origFileName: string, newFile) {
-    //     try {
-    //         const origFillePath = path.resolve(__dirname, '..', 'static', origFileName);
-    //         if (!fs.existsSync(origFillePath)) {
-    //             throw new Error('File updating failed because no original file');
-    //         }
-    //         fs.writeFileSync(origFillePath, newFile.buffer)
-    //         return origFillePath
-    //     } catch (error) {
-    //         console.error('Error updating file:', error);
-    //         throw new Error('File updating failed');
-    //     }
-    // }
-
-
 }
