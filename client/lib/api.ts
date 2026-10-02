@@ -1,3 +1,6 @@
 import axios from "axios";
 
-export const api = axios.create({ withCredentials: true });
+export const api = axios.create({
+    baseURL: "/api/backend",
+    withCredentials: true,
+});

@@ -1,11 +1,12 @@
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { IPlanet } from "@/app/types/Planet";
 import styles from '@/app/styles/tablet.module.scss'
 import { useEffect, useMemo, useState } from "react";
 import { useMap } from "@/app/context/mapContext";
 import { ILegion } from "@/app/types/legion";
 import { useAppSelector } from "@/hooks/useStore";
-import { authClient } from "@/lib/auth-client";
-import { truncateText } from "../sidebar/ScrollableBlockColumn.tsx";
+import { truncateText } from "../sidebar/ScrollableBlockColumn";
+import { fileUrl } from "@/lib/fileUrl";
 
 
 interface PlanetBarProps {
@@ -28,15 +29,7 @@ export const PlanetBar = (
     const { legions } = useAppSelector(
         (state) => state.reducerLegions
     );
-    const { data: session, isPending } = authClient.useSession();
-    const [admin, setAdmin] = useState(false)
-    useEffect(() => {
-        if (session?.user.role === "ADMIN") {
-            setAdmin(true);
-        } else {
-            setAdmin(false);
-        }
-    }, [session]);
+    const admin = useIsAdmin();
 
     const findById = (id: string): string | undefined => {
         if (legions) {
@@ -60,7 +53,6 @@ export const PlanetBar = (
 
 
 
-    const [data, setData] = useState<IPlanet>(planet);
     const { setCurrentLegions, setCurrentPlanet } = useMap()
 
     function handleSelectingPlanet(_id: string): void {
@@ -78,8 +70,8 @@ export const PlanetBar = (
             <div className="flex flex-row justify-around w-[100%] h-[100%]">
 
                 <div className="flex flex-col ">
-                    <div className={styles.name}>{truncateText(data.name,12)}</div>
-                    <div className={[styles.position, "inline-block whitespace-nowrap"].join(' ')}>-расположение ---{data.ingamePosition}</div>
+                    <div className={styles.name}>{truncateText(planet.name,12)}</div>
+                    <div className={[styles.position, "inline-block whitespace-nowrap"].join(' ')}>-расположение ---{planet.ingamePosition}</div>
 
                 </div>
 
@@ -91,11 +83,7 @@ export const PlanetBar = (
                             imgsLegions.map((icon, index) => (
                                 <img
                                     key={icon}
-                                    src={process.env.NEXT_PUBLIC_ORIGIN_SERVER +
-                                        "/static/" +
-                                        icon +
-                                        ".png"        
-                                    } // пример формирования src
+                                    src={fileUrl(icon)} // пример формирования src
                                     alt={`Легион ${index}`}
                                     className="h-[100%] object-contain rounded" />
                             ))
@@ -104,9 +92,9 @@ export const PlanetBar = (
                         )}
                     </div>
                     {admin && <div className="flex flex-col  ">
-                        <button className={styles.id} onClick={() => onclick(planet)}>Редактировать</button>
-                        <button className={styles.id} onClick={() => ondelete(planet._id)}>Удалить</button>
-                        <button className={styles.id} onClick={handleCreateEventClick}>Создать ивент</button>
+                        <button className={styles.id} onClick={(e) => { e.stopPropagation(); onclick(planet); }}>Редактировать</button>
+                        <button className={styles.id} onClick={(e) => { e.stopPropagation(); ondelete(planet._id); }}>Удалить</button>
+                        <button className={styles.id} onClick={(e) => { e.stopPropagation(); handleCreateEventClick(); }}>Создать ивент</button>
                         
                     </div>}
 

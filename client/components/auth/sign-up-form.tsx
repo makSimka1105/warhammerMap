@@ -44,6 +44,7 @@ export function SignUpForm({
     const router = useRouter();
     const pathname = usePathname();
     const [isNavigating, setIsNavigating] = useState(false);
+    const [emailSent, setEmailSent] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -65,6 +66,10 @@ export function SignUpForm({
                     (result as any).error?.message || "Sign-up failed"
                 );
             }
+            if (!result.data?.token) {
+                setEmailSent(true);
+                return;
+            }
             toast.success("Signed up successfully.");
             setIsNavigating(true);
             router.push("/");
@@ -79,6 +84,27 @@ export function SignUpForm({
             setIsNavigating(false);
         }
     }, [isNavigating, pathname]);
+
+    if (emailSent) {
+        return (
+            <div className={cn("flex flex-col gap-6", className)} {...props}>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Check your email</CardTitle>
+                        <CardDescription>
+                            We sent a verification link to{" "}
+                            {form.getValues("email")}. Open it to activate your
+                            account, then{" "}
+                            <a href="/login" className="underline">
+                                log in
+                            </a>
+                            .
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -157,6 +183,7 @@ export function SignUpForm({
                                             <FormItem>
                                                 <FormControl>
                                                     <Input
+                                                        type="password"
                                                         placeholder="password"
                                                         {...field}
                                                     />
@@ -183,12 +210,6 @@ export function SignUpForm({
                                         isNavigating
                                             ? "Signing up..."
                                             : "Sign up"}
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                    >
-                                        Sign up with Google
                                     </Button>
                                 </div>
                             </div>

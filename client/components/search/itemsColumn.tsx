@@ -1,3 +1,4 @@
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import React, { useEffect, useState } from 'react';
 import { PlanetBar } from '@/components/search/planetBar';
 import { IPlanet } from '@/app/types/Planet';
@@ -29,15 +30,7 @@ interface LegionsListProps {
 
 export function PlanetsList({ planets }: PlanetsListProps) {
 
-    const { data: session, isPending } = authClient.useSession();
-    const [admin, setAdmin] = useState(false)
-    useEffect(() => {
-        if (session?.user.role === "ADMIN") {
-            setAdmin(true);
-        } else {
-            setAdmin(false);
-        }
-    }, [session]);
+    const admin = useIsAdmin();
     const dispatch = useAppDispatch();
 
     const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
@@ -223,15 +216,7 @@ export function PlanetsList({ planets }: PlanetsListProps) {
 
 
 export function LegionsList({ legions }: LegionsListProps) {
-    const { data: session, isPending } = authClient.useSession();
-    const [admin, setAdmin] = useState(false);
-    useEffect(() => {
-        if (session?.user.role === "ADMIN") {
-            setAdmin(true);
-        } else {
-            setAdmin(false);
-        }
-    }, [session]);
+    const admin = useIsAdmin();
 
     const dispatch = useAppDispatch();
 

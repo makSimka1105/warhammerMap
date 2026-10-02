@@ -132,6 +132,7 @@ export function LoginForm({
                                             <FormItem>
                                                 <FormControl>
                                                     <Input
+                                                        type="password"
                                                         placeholder="password"
                                                         {...field}
                                                     />
@@ -158,12 +159,6 @@ export function LoginForm({
                                         isNavigating
                                             ? "Logging in..."
                                             : "Login"}
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                    >
-                                        Login with Google
                                     </Button>
                                 </div>
                             </div>

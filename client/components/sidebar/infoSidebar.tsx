@@ -2,7 +2,7 @@ import styles from "@/app/styles/infoSidebar.module.scss";
 import React, { useEffect, useState } from "react";
 import { useMap } from "@/app/context/mapContext";
 
-import ScrollableBlockColumn from "./ScrollableBlockColumn.tsx";
+import ScrollableBlockColumn from "./ScrollableBlockColumn";
 import { UpperInfo } from "./upperInfo";
 import { IPlanet } from "@/app/types/Planet.js";
 import { ILegion } from "@/app/types/legion.js";

@@ -2,8 +2,7 @@ import { ILegion } from "@/app/types/legion";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "@/lib/api";
 
-// URL вашего API
-const userAPI = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/legions";
+const userAPI = "/legions";
 
 // Создание асинхронного thunk для получения данных
 export const fetchLegions = createAsyncThunk(

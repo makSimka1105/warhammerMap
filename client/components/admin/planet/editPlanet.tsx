@@ -39,14 +39,13 @@ export const PlanetEditDrawer: React.FC<PlanetEditDrawerProps> = ({
             initialValues={planetData}
             onSubmit={(formData:FormData) => {
               onSave(formData,planetData.id||"");
-              onClose();
             }}
           />
         </div>
 
         <DrawerFooter className="flex-shrink-0">
           <DrawerClose asChild>
-            <Button onClick={onClose}>Закрыть</Button>
+            <Button>Закрыть</Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

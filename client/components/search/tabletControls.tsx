@@ -1,3 +1,4 @@
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { TabType } from "../search/databaseTablet";
 import { Button } from "../ui/button";
@@ -23,15 +24,8 @@ export default function TabletControls({
 }: AdminControlsProps) {
 
 
-  const { data: session, isPending } = authClient.useSession();
-  const [admin, setAdmin] = useState(false)
-  useEffect(() => {
-    if (session?.user.role === "ADMIN") {
-      setAdmin(true);
-    } else {
-      setAdmin(false);
-    }
-  }, [session]);
+  const { data: session } = authClient.useSession();
+  const admin = useIsAdmin();
 
   return (
     <div className={styles.tabletControls}>

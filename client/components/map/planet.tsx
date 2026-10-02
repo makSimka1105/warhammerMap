@@ -6,6 +6,7 @@ import { IPlanet } from "@/app/types/Planet";
 import { useAppSelector } from "@/hooks/useStore";
 import { ILegion } from "@/app/types/legion";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { fileUrl } from "@/lib/fileUrl";
 
 const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
     const { legions, loading } = useAppSelector(
@@ -64,7 +65,7 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
         >
             <img
                 className={styles["planet-icon"]}
-                src={`${process.env.NEXT_PUBLIC_ORIGIN_SERVER}/static/` + planet.pic + ".png"}
+                src={fileUrl(planet.pic)}
                 style={{ width: "60%" }}
                 alt={`Planet ${planet.name}`}
             />
@@ -102,11 +103,7 @@ const Planet: React.FC<{ planet: IPlanet }> = ({ planet }) => {
                         imgsLegions.map((link: string, key: number) => (
                             <img
                                 key={key}
-                                src={process.env.NEXT_PUBLIC_ORIGIN_SERVER+
-                                    "/static/" +
-                                    link +
-                                    ".png"
-                                }
+                                src={fileUrl(link)}
                                 style={{
                                     zIndex: 1000,
                                     height: "100%",
