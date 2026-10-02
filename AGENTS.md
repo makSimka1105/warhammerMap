@@ -110,8 +110,13 @@ Fix these before building features on top of them:
 - TypeScript everywhere. Client components live in `client/components/<area>/`, domain types in `client/app/types/`, server state in Redux slices.
 - Styling: SCSS modules in `client/app/styles/` for the map and custom UI, shadcn components in `client/components/ui/`.
 - Server modules follow Nest layout: `<entity>.controller.ts`, `<entity>.service.ts`, `<entity>.schema.ts`, DTOs in `server/src/dto/`.
-- Keep changes surgical, and no narration comments. Comments in the codebase are in Russian or English, and both are fine.
-- Do not commit, push or open PRs unless asked.
+- Server code: 4-space indent, single quotes in new files, Nest exceptions (`NotFoundException`, `BadRequestException`, …) instead of `throw Error`, so clients get a real status.
+- Client code: double quotes, function components, API calls only through Redux thunks that use `api` from `client/lib/api.ts`.
+- New behaviour comes with a test: `*.spec.ts` next to the server file (jest, `npm test` in `server/`).
+- Keep diffs surgical: touch only what the task needs, leave unrelated formatting alone. Comments explain *why*, in Russian or English.
+- Conventional commits (`feat(server): …`, `fix(client): …`). Do not commit, push or open PRs unless asked.
+
+`.claude/hooks/check-edit.sh` runs after every edit of a `client/` or `server/src/` TS file. It typechecks that package and rejects bare `axios` imports in the client. If the hook fails, fix the error before moving on. Both packages typecheck clean today, so any error is yours.
 
 ## Deploy target (planned, $0)
 
