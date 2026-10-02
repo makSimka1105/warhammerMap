@@ -1,85 +1,85 @@
-import { BadRequestException } from '@nestjs/common';
-import { promises as fsp } from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import { BadRequestException, INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { Connection, createConnection } from 'mongoose';
+import * as request from 'supertest';
 import { FileService } from './file.service';
+import { FilesController } from './files.controller';
 import { imageUploadOptions } from './upload.options';
 
-describe('FileService', () => {
-    let root: string;
+const MONGO_URL = process.env.MONGO_TEST_URL ?? 'mongodb://localhost:27017';
+const PNG = { mimetype: 'image/png', buffer: Buffer.from('png-bytes') };
+
+describe('FileService and FilesController on GridFS', () => {
+    let connection: Connection;
     let service: FileService;
+    let app: INestApplication;
 
-    beforeEach(async () => {
-        root = await fsp.mkdtemp(path.join(os.tmpdir(), 'static-'));
-        service = new FileService(root);
+    beforeAll(async () => {
+        connection = await createConnection(`${MONGO_URL}/wh_test_${Date.now()}_${process.pid}`).asPromise();
+        service = new FileService(connection);
+        const module = await Test.createTestingModule({
+            controllers: [FilesController],
+            providers: [{ provide: FileService, useValue: service }],
+        }).compile();
+        app = module.createNestApplication();
+        await app.init();
     });
 
-    afterEach(async () => {
-        await fsp.rm(root, { recursive: true, force: true });
+    afterAll(async () => {
+        await app.close();
+        await connection.dropDatabase();
+        await connection.close();
     });
 
-    const png = { mimetype: 'image/png', buffer: Buffer.from('png-bytes') };
-
-    it('stores <uuid>.<ext> under the category and returns an extension-less path', async () => {
-        const stored = await service.uploadFile(png, 'icons');
-
-        expect(stored).toMatch(/^icons\/[0-9a-f-]{36}$/);
-        const content = await fsp.readFile(path.join(root, `${stored}.png`));
-        expect(content.toString()).toBe('png-bytes');
+    it('stores an image as <objectId>.<ext>', async () => {
+        expect(await service.uploadFile(PNG)).toMatch(/^[0-9a-f]{24}\.png$/);
+        expect(await service.uploadFile({ ...PNG, mimetype: 'image/jpeg' })).toMatch(/\.jpg$/);
+        expect(await service.uploadFile({ ...PNG, mimetype: 'image/webp' })).toMatch(/\.webp$/);
     });
 
-    it('rejects an unsupported mime type', async () => {
-        await expect(service.uploadFile({ mimetype: 'text/html', buffer: Buffer.alloc(0) }, 'icons'))
-            .rejects.toBeInstanceOf(BadRequestException);
+    it('streams it back with content type and immutable cache headers', async () => {
+        const name = await service.uploadFile(PNG);
+
+        const res = await request(app.getHttpServer()).get(`/files/${name}`).expect(200);
+
+        expect(res.headers['content-type']).toBe('image/png');
+        expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+        expect(res.body.toString()).toBe('png-bytes');
     });
 
-    it('deletes only the file it was asked to', async () => {
-        const first = await service.uploadFile(png, 'icons');
-        const second = await service.uploadFile(png, 'icons');
+    it('answers 404 for missing, malformed and mismatched names', async () => {
+        const name = await service.uploadFile(PNG);
+        const wrongExt = name.replace('.png', '.jpg');
 
-        await service.deleteFile(first);
-
-        await expect(fsp.access(path.join(root, `${first}.png`))).rejects.toThrow();
-        await expect(fsp.access(path.join(root, `${second}.png`))).resolves.toBeUndefined();
+        for (const bad of ['000000000000000000000000.png', 'nope', '..%2F..%2Fetc', wrongExt]) {
+            await request(app.getHttpServer()).get(`/files/${bad}`).expect(404);
+        }
     });
 
-    it('rejects names that resolve outside the static root', async () => {
-        const outside = path.join(path.dirname(root), `outside-${path.basename(root)}`);
-        await fsp.writeFile(`${outside}.png`, 'keep');
+    it('deletes by stored value and tolerates repeats', async () => {
+        const name = await service.uploadFile(PNG);
 
-        await expect(service.deleteFile('../../etc/passwd')).rejects.toBeInstanceOf(BadRequestException);
-        await expect(service.deleteFile(`../${path.basename(outside)}`)).rejects.toBeInstanceOf(BadRequestException);
-        expect((await fsp.readFile(`${outside}.png`)).toString()).toBe('keep');
+        await service.deleteFile(name);
+        await service.deleteFile(name);
 
-        await fsp.rm(`${outside}.png`);
+        await request(app.getHttpServer()).get(`/files/${name}`).expect(404);
     });
 
-    it('skips old-format values without touching the directory', async () => {
-        const legacyDir = path.join(root, 'icons', 'Terra');
-        await fsp.mkdir(legacyDir, { recursive: true });
-        await fsp.writeFile(path.join(legacyDir, 'abc.png'), 'old');
+    it('does not delete anything for values that are not <24-hex>.<ext>', async () => {
+        const name = await service.uploadFile(PNG);
 
         await service.deleteFile('icons/Terra/abc');
+        await service.deleteFile(name.split('.')[0]);
+        await service.deleteFiles(undefined);
 
-        await expect(fsp.access(path.join(legacyDir, 'abc.png'))).resolves.toBeUndefined();
+        await request(app.getHttpServer()).get(`/files/${name}`).expect(200);
     });
 
-    it('ignores names outside the known categories', async () => {
-        await fsp.writeFile(path.join(root, 'x.png'), 'root file');
-
-        await service.deleteFile('./x');
-
-        await expect(fsp.access(path.join(root, 'x.png'))).resolves.toBeUndefined();
-    });
-
-    it('rejects a missing file with 400', async () => {
-        await expect(service.uploadFile(undefined, 'icons')).rejects.toBeInstanceOf(BadRequestException);
-    });
-
-    it('rejects mime types that only exist on Object.prototype', async () => {
-        await expect(service.uploadFile({ mimetype: 'constructor', buffer: Buffer.alloc(0) }, 'icons'))
-            .rejects.toBeInstanceOf(BadRequestException);
-        expect(await fsp.readdir(root)).toEqual([]);
+    it('rejects a missing file and unsupported or prototype mime types with 400', async () => {
+        await expect(service.uploadFile(undefined)).rejects.toBeInstanceOf(BadRequestException);
+        for (const mimetype of ['text/html', 'constructor']) {
+            await expect(service.uploadFile({ mimetype, buffer: Buffer.alloc(0) })).rejects.toBeInstanceOf(BadRequestException);
+        }
     });
 });
 
@@ -108,7 +108,7 @@ describe('imageUploadOptions.fileFilter', () => {
         }
     });
 
-    it('limits files to 5 MB', () => {
-        expect(imageUploadOptions.limits?.fileSize).toBe(5 * 1024 * 1024);
+    it('limits files to 4 MB', () => {
+        expect(imageUploadOptions.limits?.fileSize).toBe(4 * 1024 * 1024);
     });
 });

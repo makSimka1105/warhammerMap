@@ -1,22 +1,27 @@
-import { BadRequestException, Inject, Injectable, Optional } from "@nestjs/common";
-import { promises as fsp } from 'fs';
-import * as path from 'path';
-import * as uuid from 'uuid';
-import { extensionFor, MIME_EXTENSIONS } from "./upload.options";
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectConnection } from '@nestjs/mongoose';
+import { Connection, mongo, Types } from 'mongoose';
+import { Readable } from 'stream';
+import { extensionFor, MIME_EXTENSIONS } from './upload.options';
 
-export const STATIC_ROOT = 'STATIC_ROOT';
+export const IMAGES_BUCKET = 'images';
 
-const STORED_NAME = /^(icons|legions|events)\/[0-9a-f-]{36}$/;
+const EXTENSIONS = Object.values(MIME_EXTENSIONS).join('|');
+const STORED_NAME = new RegExp(`^([0-9a-f]{24})\\.(${EXTENSIONS})$`);
+
+export interface StoredImage {
+    id: Types.ObjectId;
+    contentType: string;
+    length: number;
+}
 
 @Injectable()
 export class FileService {
-    private readonly staticRoot: string;
+    private bucket?: mongo.GridFSBucket;
 
-    constructor(@Optional() @Inject(STATIC_ROOT) staticRoot?: string) {
-        this.staticRoot = path.resolve(staticRoot ?? path.join(__dirname, '..', 'static'));
-    }
+    constructor(@InjectConnection() private readonly connection: Connection) {}
 
-    async uploadFile(file, category: string) {
+    async uploadFile(file: { mimetype: string; buffer: Buffer } | null | undefined): Promise<string> {
         if (!file) {
             throw new BadRequestException('Image file is required');
         }
@@ -24,45 +29,59 @@ export class FileService {
         if (!ext) {
             throw new BadRequestException('Unsupported file type');
         }
-        const id = uuid.v4();
-        const dir = path.join(this.staticRoot, category);
-        await fsp.mkdir(dir, { recursive: true });
-        await fsp.writeFile(path.join(dir, `${id}.${ext}`), file.buffer);
-        return `${category}/${id}`;
+        const id = new Types.ObjectId();
+        const name = `${id}.${ext}`;
+        await new Promise<void>((resolve, reject) => {
+            this.getBucket()
+                .openUploadStreamWithId(id, name, { contentType: file.mimetype })
+                .once('error', reject)
+                .once('finish', () => resolve())
+                .end(file.buffer);
+        });
+        return name;
     }
 
-    async uploadFiles(files: [], category: string) {
-        return Promise.all(files.map((file) => this.uploadFile(file, category)));
+    uploadFiles(files: Array<{ mimetype: string; buffer: Buffer }>): Promise<string[]> {
+        return Promise.all(files.map((file) => this.uploadFile(file)));
     }
 
-    async deleteFile(fileName: string | undefined): Promise<void> {
-        if (!fileName) return;
-        const target = path.resolve(this.staticRoot, fileName);
-        if (!target.startsWith(this.staticRoot + path.sep)) {
-            throw new BadRequestException('Invalid file name');
+    async deleteFile(stored: string | undefined | null): Promise<void> {
+        const id = this.parseStoredName(stored)?.id;
+        if (!id) return;
+        try {
+            await this.getBucket().delete(id);
+        } catch (error) {
+            if (!(error instanceof mongo.MongoRuntimeError) || !/File not found/.test(error.message)) {
+                throw error;
+            }
         }
-        if (!STORED_NAME.test(fileName)) return;
-        await Promise.all(Object.values(MIME_EXTENSIONS).map(async (ext) => {
-            try {
-                await fsp.unlink(`${target}.${ext}`);
-            } catch (error) {
-                if (error.code !== 'ENOENT') throw error;
-            }
-        }));
     }
 
-    async deleteFiles(fillesNames: string[] | undefined) {
-        if (fillesNames == undefined) { throw new Error('файлы не получены') }
+    async deleteFiles(stored: Array<string | undefined | null> | undefined | null): Promise<void> {
+        await Promise.all((stored ?? []).map((name) => this.deleteFile(name)));
+    }
 
-        const deletedFiles = await Promise.all(fillesNames.map(async (fileName) => {
-            try {
-                return this.deleteFile(fileName)
-            } catch (error) {
-                console.log('не удалос удалить файл', fileName, error)
-                throw new Error(error)
-            }
-        }))
-        console.log(deletedFiles)
-        return deletedFiles
+    async find(name: string): Promise<StoredImage | null> {
+        const parsed = this.parseStoredName(name);
+        if (!parsed) return null;
+        const [file] = await this.getBucket().find({ _id: parsed.id }).limit(1).toArray();
+        if (!file || file.filename !== name) return null;
+        return { id: parsed.id, contentType: file.contentType ?? 'application/octet-stream', length: file.length };
+    }
+
+    openDownload(id: Types.ObjectId): Readable {
+        return this.getBucket().openDownloadStream(id);
+    }
+
+    private parseStoredName(name: string | undefined | null) {
+        const match = name ? STORED_NAME.exec(name) : null;
+        return match ? { id: new Types.ObjectId(match[1]), ext: match[2] } : null;
+    }
+
+    private getBucket(): mongo.GridFSBucket {
+        if (!this.bucket) {
+            this.bucket = new mongo.GridFSBucket(this.connection.db!, { bucketName: IMAGES_BUCKET });
+        }
+        return this.bucket;
     }
 }

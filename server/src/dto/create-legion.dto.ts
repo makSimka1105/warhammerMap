@@ -1,10 +1,14 @@
+import { PartialType } from '@nestjs/mapped-types';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateLegionDto {
+    @IsString()
+    @IsNotEmpty()
     readonly name: string;
-    readonly description: string;
-    readonly icon: File;
-    readonly planets:string[]
 
-
+    @IsOptional()
+    @IsString()
+    readonly description?: string;
 }
 
+export class UpdateLegionDto extends PartialType(CreateLegionDto) {}

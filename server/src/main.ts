@@ -1,36 +1,23 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./main-app.module";
-import fs from 'fs-extra';
-const start = async () => {
-    try {
-        const PORT = process.env.PORT || 5000;
-        const app = await NestFactory.create(AppModule);
-        async function returnStatic() {
-            const TEMP_DIR = './.temp_static_backup';
-            const DIST_STATIC = './dist/static';
-            try {
-                await fs.copy(TEMP_DIR, DIST_STATIC);
-                await fs.remove(TEMP_DIR); // Очищаем временную папку
-                console.log('📂 restore: Copied', TEMP_DIR, '→', DIST_STATIC);
-                
-            } catch (error) {
-                console.log("ошибка копирования ститики",error)
-            }
-        
-        }
-        await returnStatic()
-        app.enableCors({
-            origin: process.env.FRONT_URL, // разрешенный адрес сайта
-            credentials: true,
-            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'// разрешенные методы
-        });
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './main-app.module';
 
-        await app.listen(PORT, () => { console.log(`server was started on  ${PORT}`) })
-        await returnStatic();
+async function start() {
+    const app = await NestFactory.create(AppModule);
+    const config = app.get(ConfigService);
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.enableCors({
+        origin: config.getOrThrow<string>('FRONT_URL'),
+        credentials: true,
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    });
+    const port = config.get<number>('PORT') ?? 5000;
+    await app.listen(port);
+    console.log(`server was started on ${port}`);
+}
 
-    } catch (e) {
-        console.log(e);
-    };
-};
-
-start()
+start().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});

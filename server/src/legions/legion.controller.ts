@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ObjectId } from "mongoose";
 import { LegionService } from "./legion.service";
-import { CreateLegionDto } from "src/dto/create-legion.dto";
+import { CreateLegionDto, UpdateLegionDto } from "src/dto/create-legion.dto";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { ParseObjectIdPipe } from "src/common/parse-object-id.pipe";
 import { imageUploadOptions } from "src/files/upload.options";
 
 
@@ -16,7 +16,7 @@ export class LegionController {
         { name: 'icon', maxCount: 1 },
     ], imageUploadOptions))
     create(@Body() dto: CreateLegionDto, @UploadedFiles() files: { icon?: Express.Multer.File[]}) {
-        const icon = files.icon ? files.icon[0] : null;
+        const icon = files?.icon?.[0] ?? null;
         return this.legionService.create(dto, icon)
     }
     @Get()
@@ -24,12 +24,12 @@ export class LegionController {
         return this.legionService.getAll()
     }
     @Get(':id')
-    getOne(@Param('id') id: ObjectId) {
+    getOne(@Param('id', ParseObjectIdPipe) id: string) {
         return this.legionService.getOne(id)
 
     }
     @Delete(':id')
-    delete(@Param('id') id: ObjectId) {
+    delete(@Param('id', ParseObjectIdPipe) id: string) {
         return this.legionService.delete(id)
     }
 
@@ -44,9 +44,8 @@ export class LegionController {
     @Put(':id')
     @UseInterceptors(FileFieldsInterceptor([{ name: 'icon', maxCount: 1 }], imageUploadOptions))
 
-    update(@Param('id') id: string, @Body() dto: CreateLegionDto, @UploadedFiles() files: { icon?: Express.Multer.File[]}) {
-        const icon = files.icon ? files.icon[0] : null;
-        
+    update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateLegionDto, @UploadedFiles() files: { icon?: Express.Multer.File[]}) {
+        const icon = files?.icon?.[0] ?? null;
         return this.legionService.update(id, dto,icon)
     }
 

@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { PlanetService } from "./planets.service";
-import { CreatePlanetDto } from "src/dto/create-planet.dto";
-import { ObjectId } from "mongoose";
+import { CreatePlanetDto, UpdatePlanetDto } from "src/dto/create-planet.dto";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { ParseObjectIdPipe } from "src/common/parse-object-id.pipe";
 import { imageUploadOptions } from "src/files/upload.options";
 
 
@@ -14,7 +14,7 @@ export class PlanetController {
         { name: 'pic', maxCount: 1 },
     ], imageUploadOptions))
     create(@Body() dto: CreatePlanetDto, @UploadedFiles() files: { pic?: Express.Multer.File[] }) {
-        const pic = files.pic ? files.pic[0] : null;
+        const pic = files?.pic?.[0] ?? null;
         // const images = files.images;
 
         return this.planetService.create(dto, pic);
@@ -26,14 +26,13 @@ export class PlanetController {
     }
 
     @Get(':id')
-    getOne(@Param('id') id: ObjectId) {
+    getOne(@Param('id', ParseObjectIdPipe) id: string) {
         return this.planetService.getOne(id)
     }
 
     @Delete(':id')
-    delete(@Param('id') id: ObjectId) {
-        const Id = this.planetService.delete(id)
-        return Id
+    delete(@Param('id', ParseObjectIdPipe) id: string) {
+        return this.planetService.delete(id)
 
     }
     @Delete()
@@ -45,12 +44,12 @@ export class PlanetController {
     @Put(':id')
     @UseInterceptors(FileFieldsInterceptor([{ name: 'pic', maxCount: 1 }], imageUploadOptions))
     update(
-        @Param('id') id: string, // или ObjectId в зависимости от используемого типа
-        @Body() updatePlanetDto: CreatePlanetDto,
+        @Param('id', ParseObjectIdPipe) id: string, // или ObjectId в зависимости от используемого типа
+        @Body() updatePlanetDto: UpdatePlanetDto,
         @UploadedFiles() files: { pic?: Express.Multer.File[] }
     ) {
         // Вызов метода сервиса для обновления
-        const pic = files.pic ? files.pic[0] : null;
+        const pic = files?.pic?.[0] ?? null;
 
         return this.planetService.updatePlanet(id, updatePlanetDto, pic);
     }
