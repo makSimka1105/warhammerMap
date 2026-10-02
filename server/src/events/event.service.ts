@@ -1,11 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, ObjectId } from "mongoose";
+import { Model } from "mongoose";
 import { CreateEventDto } from "src/dto/create-event.dto";
 import { FileService } from "src/files/file.service";
 import { Planet, PlanetDocument } from "src/planets/planets.schema";
 import { Event, EventDocument } from "./event.schema";
-import { handleInvalidIdError, handleGeneralServerError, handleObjNotFound } from "src/error-holder";
+import { handleGeneralServerError, handleObjNotFound } from "src/error-holder";
 
 
 @Injectable()
@@ -16,24 +16,18 @@ export class EventService {
         // private planetService: PlanetService,
     ) { }
 
-    async create(dto: CreateEventDto, shots): Promise<Event> {
+    async create(dto: CreateEventDto, shots: Express.Multer.File[]): Promise<Event> {
         const place = await this.planetModel.findById(dto.place)
         if (!place) {
-            throw Error(`not found such place:${dto.place, dto.name}`)
+            throw new NotFoundException(`Planet ${dto.place} not found`)
         }
-        let eventShotsPath = [""]
-
-        if (shots) {
-            eventShotsPath = await this.fileService.uploadFiles(shots, 'events');
-
-            console.log("путь до файла",eventShotsPath)
-        }
+        const eventShotsPath = await this.fileService.uploadFiles(shots)
 
         const event = await this.eventModel.create({
             ...dto,
-            shots: eventShotsPath.filter((path)=>path!=""),
+            shots: eventShotsPath,
         })
-        const placeAdder = await this.planetModel.findByIdAndUpdate(
+        await this.planetModel.findByIdAndUpdate(
             dto.place,
             { $push: { 'events': event._id } },
             { new: true, runValidators: true })
@@ -45,33 +39,25 @@ export class EventService {
         return events
     }
 
-    async getOne(id: ObjectId): Promise<Event | null> {
+    async getOne(id: string): Promise<Event> {
         const event = await this.eventModel.findById(id).exec();
-        return event
-    }
-    async deleteOne(id: ObjectId): Promise<{ id: string | null }> {
-        const deleted = await this.eventModel.findByIdAndDelete(id).exec();
-        console.log(deleted)
-        const deletedFiles = await this.fileService.deleteFiles(deleted?.shots)
-        console.log("удаленные файлы: ",deletedFiles)
-         await this.planetModel.findByIdAndUpdate(deleted?.place, { $pull: { 'events': id } },
-            { new: true, runValidators: true })
-
-        if (!deleted) {
-            handleObjNotFound(deleted, id);
-            return { id: null }; // Если объект не найден, возвращаем null
-        }
-        return { id: deleted._id.toString() }
+        handleObjNotFound(event, id)
+        return event!
     }
 
-    async deleteAll(): Promise<Array<{ id: string | null }>> {
+    async deleteOne(id: string): Promise<{ id: string }> {
+        const event = await this.eventModel.findById(id).exec();
+        handleObjNotFound(event, id)
+        await this.fileService.deleteFiles(event!.shots)
+        await this.eventModel.findByIdAndDelete(id).exec();
+        await this.planetModel.updateMany({ events: event!._id }, { $pull: { events: event!._id } })
+        return { id: event!._id.toString() }
+    }
+
+    async deleteAll(): Promise<Array<{ id: string }>> {
         try {
             const events = await this.eventModel.find().exec();
             const deletedIds = await Promise.all(events.map(async (event) => {
-                if (!event._id) {
-                    handleInvalidIdError(event._id);
-                    return { id: null };
-                }
                 return await this.deleteOne(event.id);
             }))
             return deletedIds;

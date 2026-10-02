@@ -1,13 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, ObjectId } from "mongoose";
+import { Model } from "mongoose";
 import { Planet, PlanetDocument } from "./planets.schema";
-import { CreatePlanetDto } from "src/dto/create-planet.dto";
+import { CreatePlanetDto, UpdatePlanetDto } from "src/dto/create-planet.dto";
 import { handleInvalidIdError, handleObjNotFound, handleGeneralServerError } from "src/error-holder";
 import { Legion, LegionDocument } from "src/legions/legion.schema";
 import { LegionService } from "src/legions/legion.service";
 import { FileService } from "src/files/file.service";
-import { EventDocument } from "src/events/event.schema";
+import { Event, EventDocument } from "src/events/event.schema";
 
 
 @Injectable()
@@ -22,15 +22,14 @@ export class PlanetService {
     async create(dto: CreatePlanetDto, pic): Promise<Planet> {
 
         const { legion1, legion2, ...planetData } = dto;
-        console.log(legion1, legion2)
 
         const legions: string[] = []
-        if (legion1 !== null && legion1 !== undefined) { legions.push(legion1) }
-        if (legion2 !== null && legion2 !== undefined) { legions.push(legion2) }
+        if (legion1) { legions.push(legion1) }
+        if (legion2) { legions.push(legion2) }
         // console.log(legions)
         const legionSelfs = await Promise.all(legions.map(async link => {
             const founded = await this.legionModel.findById(link)
-            if (founded == null) throw Error(`${link} not found`)
+            if (founded == null) throw new NotFoundException(`Legion ${link} not found`)
             return founded
         }))
 
@@ -39,7 +38,7 @@ export class PlanetService {
                 return g._id
             }
         })
-        const picPath = await this.fileService.uploadFile(pic, 'icons');
+        const picPath = await this.fileService.uploadFile(pic);
         const createdPlanet = await this.planetModel.create({
             ...planetData,
             pic: picPath,
@@ -64,7 +63,7 @@ export class PlanetService {
         return planets
     }
 
-    async getOne(id: ObjectId): Promise<Planet | null> {
+    async getOne(id: string): Promise<Planet | null> {
         handleInvalidIdError(id)
         try {
             const planet = await this.planetModel.findById(id).populate(['legions', 'events']).exec()
@@ -75,7 +74,7 @@ export class PlanetService {
         }
     }
 
-    async delete(id: ObjectId | string): Promise<{ id: string | null }> {
+    async delete(id: string): Promise<{ id: string | null }> {
 
         try {
             // First find the planet to get its groups
@@ -99,11 +98,9 @@ export class PlanetService {
                 await this.fileService.deleteFile(planet.pic);
             }
             
-            if (planet.events) {
-                await Promise.all(planet.events.map(async link => {
-                    await this.eventModel.findByIdAndDelete(link)
-                }))
-            }
+            const events = await this.eventModel.find({ _id: { $in: planet.events } }).exec();
+            await this.fileService.deleteFiles(events.flatMap(event => event.shots));
+            await this.eventModel.deleteMany({ _id: { $in: events.map(event => event._id) } });
             
             // Finally delete the planet itself
             await this.planetModel.findByIdAndDelete(id).exec();
@@ -144,19 +141,20 @@ export class PlanetService {
     //         handleGeneralServerError(error);
     //     }
     // }
-    async updatePlanet(id: string, dto: CreatePlanetDto, pic: Express.Multer.File | null): Promise<Planet> {
+    async updatePlanet(id: string, dto: UpdatePlanetDto, pic: Express.Multer.File | null): Promise<Planet> {
+        handleInvalidIdError(id);
         // Найти текущий документ планеты
         const planet = await this.planetModel.findById(id);
         if (!planet) {
-            throw new Error(`Planet with id ${id} not found`);
+            throw new NotFoundException(`Planet with id ${id} not found`);
         }
-
-        // Загрузить новую иконку, если она есть, иначе оставить старую
-        const picPath = pic ? await this.fileService.uploadFile(pic, 'icons') : planet.pic;
 
         // Обработка легионов из dto
         const legionsToUpdate: string[] = [];
 
+        if (dto.legion1 === undefined && dto.legion2 === undefined) {
+            legionsToUpdate.push(...planet.legions.map(String));
+        }
         if (dto.legion1 === "") {
             // Remove legion1
         } else if (dto.legion1 !== undefined) {
@@ -172,11 +170,14 @@ export class PlanetService {
         // Проверить легионы и получить их документы
         const legionInstances = await Promise.all(legionsToUpdate.map(async (legionId) => {
             const legion = await this.legionModel.findById(legionId);
-            if (!legion) throw new Error(`Legion ${legionId} not found`);
+            if (!legion) throw new NotFoundException(`Legion ${legionId} not found`);
             return legion;
         }));
 
         const legionsIds = legionInstances.map(l => l._id);
+
+        // Загрузить новую иконку, если она есть, иначе оставить старую
+        const picPath = pic ? await this.fileService.uploadFile(pic) : planet.pic;
 
         // Удалить планету из легионов, которые были раньше, но не используются сейчас
         const oldLegions = planet.legions.map(id => id.toString());
@@ -184,7 +185,6 @@ export class PlanetService {
             
 
             await this.legionService.deletePlanet(legionId, id);
-            console.log()
 
         }
 

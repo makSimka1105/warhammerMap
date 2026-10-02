@@ -15,8 +15,9 @@ import { PlanetSchema ,Planet} from "./planets/planets.schema";
 
 
 import { FileService } from "./files/file.service";
+import { FilesController } from "./files/files.controller";
 import { EventController } from "./events/event.controller";
-import { EventSchema } from "./events/event.schema";
+import { Event, EventSchema } from "./events/event.schema";
 import { EventService } from "./events/event.service";
 
 
@@ -36,6 +37,7 @@ import { EventService } from "./events/event.service";
         PlanetController,
         LegionController,
         EventController,
+        FilesController,
 
     ],
     providers: [

@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, ObjectId } from "mongoose";
+import { Model } from "mongoose";
 import { Legion, LegionDocument } from "./legion.schema";
-import { CreateLegionDto } from "src/dto/create-legion.dto";
+import { CreateLegionDto, UpdateLegionDto } from "src/dto/create-legion.dto";
 import { handleInvalidIdError, handleObjNotFound, handleGeneralServerError } from "src/error-holder";
 import { FileService } from "src/files/file.service";
 import { Planet, PlanetDocument } from "src/planets/planets.schema";
@@ -17,7 +17,7 @@ export class LegionService {
     ) { }
 
     async create(dto: CreateLegionDto, icon): Promise<Legion> {
-        const legionIconPath = await this.fileService.uploadFile(icon, 'legions');
+        const legionIconPath = await this.fileService.uploadFile(icon);
 
 
         const legion = await this.legionModel.create({
@@ -34,10 +34,10 @@ export class LegionService {
         return legions
     }
 
-    async getOne(id: ObjectId | string): Promise<Legion | null> {
+    async getOne(id: string): Promise<Legion | null> {
         handleInvalidIdError(id)
         try {
-            const legion = await this.legionModel.findById(id).populate('objects').populate('planets').exec();
+            const legion = await this.legionModel.findById(id).populate('planets').exec();
             handleObjNotFound(legion, id)
             return legion
         } catch (error) {
@@ -45,7 +45,7 @@ export class LegionService {
         }
     }
 
-    async delete(id: ObjectId | string): Promise<{ id: string | null, icon: string | void }> {
+    async delete(id: string): Promise<{ id: string | null, icon: string | void }> {
         handleInvalidIdError(id)
         try {
             const deleted = await this.legionModel.findByIdAndDelete(id).exec();
@@ -65,7 +65,7 @@ export class LegionService {
             handleGeneralServerError(error)
         }
     }
-    async deletePlanet(id: any , objectId: ObjectId|string ): Promise<{ id: string | null }> {
+    async deletePlanet(id: any , objectId: string ): Promise<{ id: string | null }> {
         handleInvalidIdError(id);
         handleInvalidIdError(objectId);
         // if  (typeof id === 'string'){
@@ -76,7 +76,6 @@ export class LegionService {
         try {
             const update = { $pull: { 'planets': objectId } }; // Используем $pull для удаления элемента из массива
             const updatedLegion = await this.legionModel.findByIdAndUpdate(id, update, { new: true, runValidators: true }).exec();
-            console.log("после удаления планеты ",updatedLegion)
             // handleObjNotFound(updatedLegion, id);
             return { id: updatedLegion ? updatedLegion._id.toString() : null };
         } catch (error) {
@@ -104,17 +103,17 @@ export class LegionService {
     }
 
 
-    async update(id: string, dto: Partial<CreateLegionDto>, icon: Express.Multer.File | null): Promise<Legion | null> {
+    async update(id: string, dto: UpdateLegionDto, icon: Express.Multer.File | null): Promise<Legion | null> {
         handleInvalidIdError(id);
         try {
 
             const legion = await this.legionModel.findById(id);
             if (!legion) {
-                throw new Error(`Legion with id ${id} not found`);
+                throw new NotFoundException(`Legion with id ${id} not found`);
             }
 
             // Загрузить новую иконку, если она есть, иначе оставить старую
-            const iconPath = icon ? await this.fileService.uploadFile(icon, 'legions') : legion.icon;
+            const iconPath = icon ? await this.fileService.uploadFile(icon) : legion.icon;
 
 
 
@@ -123,8 +122,8 @@ export class LegionService {
                 {
 
                     $set: {
-                        'name': dto.name,
-                        'description': dto.description,
+                        'name': dto.name ?? legion.name,
+                        'description': dto.description ?? legion.description,
                         'icon': iconPath,
                     }
                 }

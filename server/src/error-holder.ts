@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { HttpException, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Types } from 'mongoose';
 
 /**
@@ -34,7 +34,7 @@ export function handleObjNotFound(result: any, id: string | object): void {
  * @throws Возбуждает BadRequestException или InternalServerErrorException с подробным сообщением
  */
 export function handleGeneralServerError(error: any): never {
-  if (error instanceof BadRequestException || error instanceof NotFoundException) {
+  if (error instanceof HttpException) {
     throw error; // уже обработанные исключения пробрасываем выше
   }
   throw new InternalServerErrorException(`Internal server error: ${error.message || error.toString()}`);
