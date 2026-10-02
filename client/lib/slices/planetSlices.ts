@@ -4,9 +4,8 @@ import { PlanetData } from "@/components/admin/planet/NewPlanetTab";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "@/lib/api";
 
-// URL вашего API
-const userAPI = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/planets";
-const userAPI_events = process.env.NEXT_PUBLIC_ORIGIN_SERVER+"/events";
+const userAPI = "/planets";
+const userAPI_events = "/events";
 
 // Создание асинхронного thunk для получения данных
 export const fetchPlanets = createAsyncThunk(

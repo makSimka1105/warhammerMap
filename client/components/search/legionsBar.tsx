@@ -1,8 +1,9 @@
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import styles from "@/app/styles/tablet.module.scss";
 import { useEffect, useState } from "react";
 import { ILegion } from "@/app/types/legion";
 import { useMap } from "@/app/context/mapContext";
-import { authClient } from "@/lib/auth-client";
+import { fileUrl } from "@/lib/fileUrl";
 
 
 interface LegionBarProps {
@@ -15,17 +16,8 @@ export const LegionBar = (
     { legion, onclick, ondelete }: LegionBarProps
 
 ) => {
-    // console.log(process.env.NEXT_PUBLIC_ORIGIN_SERVER)
 
-    const { data: session, isPending } = authClient.useSession();
-    const [admin, setAdmin] = useState(false)
-    useEffect(() => {
-        if (session?.user.role === "ADMIN") {
-            setAdmin(true);
-        } else {
-            setAdmin(false);
-        }
-    }, [session]);
+    const admin = useIsAdmin();
     const { setCurrentPlanet } = useMap()
     // const [data, setData] = useState<ILegion>(legion);
     const handleLegionSelecting = (legion: ILegion) => {
@@ -50,7 +42,7 @@ export const LegionBar = (
                 {/* Отображение одной иконки легиона */}
                 {legion.icon ? (
                     <img
-                        src={`${process.env.NEXT_PUBLIC_ORIGIN_SERVER}/static/${legion.icon}.png`}
+                        src={fileUrl(legion.icon)}
                         alt={legion.name}
                         className="h-[100%] object-contain "
                     />
@@ -60,10 +52,10 @@ export const LegionBar = (
 
                 {/* Кнопки редактирования и удаления */}
                 {admin && <div className="flex flex-col gap-2 mt-2">
-                    <button className={styles.id} onClick={() => onclick(legion)}>
+                    <button className={styles.id} onClick={(e) => { e.stopPropagation(); onclick(legion); }}>
                         Редактировать
                     </button>
-                    <button className={styles.id} onClick={() => ondelete(legion._id)}>
+                    <button className={styles.id} onClick={(e) => { e.stopPropagation(); ondelete(legion._id); }}>
                         Удалить
                     </button>
                 </div>}

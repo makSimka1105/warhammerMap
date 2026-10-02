@@ -30,8 +30,8 @@ export const LegionEditDrawer: React.FC<LegionEditDrawerProps> = ({
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="flex flex-col h-full max-w-xl">
         <DrawerHeader>
-          <DrawerTitle>Редактировать планету</DrawerTitle>
-          <DrawerDescription>Измените данные планеты и сохраните</DrawerDescription>
+          <DrawerTitle>Редактировать легион</DrawerTitle>
+          <DrawerDescription>Измените данные легиона и сохраните</DrawerDescription>
         </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
@@ -39,14 +39,13 @@ export const LegionEditDrawer: React.FC<LegionEditDrawerProps> = ({
             initialValues={legionData}
             onSubmit={(formData:FormData) => {
               onSave(formData,legionData.id||"");
-              onClose();
             }}
           />
         </div>
 
         <DrawerFooter className="flex-shrink-0">
           <DrawerClose asChild>
-            <Button onClick={onClose}>Закрыть</Button>
+            <Button>Закрыть</Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

@@ -4,6 +4,7 @@ import { useMap } from "@/app/context/mapContext";
 import { Label } from "../ui/label";
 import { useAppSelector } from "@/hooks/useStore";
 import { ILegion } from "@/app/types/legion";
+import { fileUrl } from "@/lib/fileUrl";
 
 function isPlanet(item: IPlanet | ILegion): item is IPlanet {
     return (
@@ -31,9 +32,7 @@ export const UpperInfo: React.FC<{ item: IPlanet | ILegion | null }> = ({
                 <div className={styles.iconWrapper}>
                     <img
                         className={styles.icon}
-                        src={
-                            "http://localhost:5000/static/" + item.icon + ".png"
-                        }
+                        src={fileUrl(item.icon)}
                         alt={item.name}
                     />
                 </div>
@@ -61,7 +60,7 @@ export const UpperInfo: React.FC<{ item: IPlanet | ILegion | null }> = ({
             <div className={styles.iconWrapper}>
                 <img
                     className={styles.icon}
-                    src={"http://localhost:5000/static/" + planet.pic + ".png"}
+                    src={fileUrl(planet.pic)}
                     alt={planet.name}
                 />
             </div>
@@ -71,11 +70,7 @@ export const UpperInfo: React.FC<{ item: IPlanet | ILegion | null }> = ({
                     currentLegions.map((id, index) => (
                         <div key={index} className={styles.imageWrapper}>
                             <img
-                                src={
-                                    "http://localhost:5000/static/" +
-                                    id +
-                                    ".png"
-                                }
+                                src={fileUrl(id)}
                                 className=" object-cover h-full" />
                             <Label className={styles.imageLabel}>
                                 {getLegionName(planet.legions?.[index] || "")}

@@ -1,20 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  productionBrowserSourceMaps: false,  // отключить source maps для браузера
+  output: "standalone",
+  productionBrowserSourceMaps: false,
   experimental: {
-    serverSourceMaps: false,           // отключить source maps для сервера
-  },
-    typescript: {
-    // Позволяет собирать проект, даже если есть ошибки типов (используйте с осторожностью)
-    ignoreBuildErrors: true,
+    serverSourceMaps: false,
   },
   eslint: {
-    // Отключает проверку и ошибки ESLint при сборке
     ignoreDuringBuilds: true,
   },
-  
-  /* config options here */
+  async rewrites() {
+    return [
+      {
+        source: "/api/backend/:path*",
+        destination: `${process.env.API_ORIGIN ?? "http://localhost:5000"}/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

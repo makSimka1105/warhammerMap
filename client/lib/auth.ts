@@ -1,17 +1,23 @@
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
+import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { MongoClient } from "mongodb";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
-import { prisma } from "./prisma";
 import { Resend } from "resend";
 import VerifyEmail from "@/components/auth/verify-email";
 
-const resend = new Resend(process.env.RESEND_API_KEY as string);
+const requireEmailVerification =
+    process.env.REQUIRE_EMAIL_VERIFICATION !== "false";
+
+let resend: Resend | undefined;
+const getResend = () => (resend ??= new Resend(process.env.RESEND_API_KEY));
+
+const db = new MongoClient(
+    process.env.MONGO_URL ?? "mongodb://localhost:27017/warhammer"
+).db();
 
 export const auth = betterAuth({
-    database: prismaAdapter(prisma, {
-        provider: "postgresql",
-    }),
+    database: mongodbAdapter(db),
     databaseHooks: {
         user: {
             create: {
@@ -29,23 +35,21 @@ export const auth = betterAuth({
         },
     },
     emailVerification: {
-        sendOnSignUp: true,
+        sendOnSignUp: requireEmailVerification,
         expiresIn: 60 * 60,
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }) => {
-            const result =await resend.emails.send({
+            await getResend().emails.send({
                 from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_SENDER_ADDRESS}>`,
                 to: [user.email ],
                 subject: "Verify your email",
                 react: VerifyEmail({ username: user.name, verifyUrl:url }),
             });
-            console.log(result)
-            console.log("email sended TO " + user.email);
         },
     },
     emailAndPassword: {
         enabled: true,
-        requireEmailVerification: true,
+        requireEmailVerification,
     },
     user: {
         additionalFields: {

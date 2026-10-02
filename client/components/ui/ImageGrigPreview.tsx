@@ -1,3 +1,5 @@
+import { fileUrl } from "@/lib/fileUrl";
+
 interface ImageGridPreviewProps {
   images: string[] | undefined | null;
 }
@@ -12,7 +14,7 @@ export const ImageGridPreview: React.FC<ImageGridPreviewProps> = ({ images }) =>
       {images.map((src, idx) => (
         <img
           key={idx}
-          src={`${process.env.NEXT_PUBLIC_ORIGIN_SERVER}/static/${src}.jpg`}
+          src={fileUrl(src)}
           alt={`Снимок ${idx + 1}`}
           className="w-full h-32 object-cover rounded"
         />

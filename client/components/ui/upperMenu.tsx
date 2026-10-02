@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "@/app/styles/upperMenu.module.scss";
-import RunningMarquee from "./RunningMarquee ";
+import RunningMarquee from "./RunningMarquee";
 
 const UpperMenu: React.FC = () => {
     return (

@@ -62,10 +62,9 @@ export function EventCreateDrawer({ isOpen, onClose, onSave, planetId }: EventCr
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Подтверждение удаления</DialogTitle>
+                    <DialogTitle>Создать ивент</DialogTitle>
                     <DialogDescription>
-                        Вы уверены, что хотите удалить этот легион? Это действие невозможно
-                        отменить.
+                        Заполните данные ивента и прикрепите до 4 скриншотов.
                     </DialogDescription>
                 </DialogHeader>
                 <input placeholder="Название" value={title} onChange={e => setTitle(e.target.value)} />
@@ -78,7 +77,7 @@ export function EventCreateDrawer({ isOpen, onClose, onSave, planetId }: EventCr
                     <DialogClose asChild>
                         <Button variant="outline">Отмена</Button>
                     </DialogClose>
-                    <Button variant="destructive" onClick={handleSubmit}>
+                    <Button onClick={handleSubmit}>
                         сохранить
                     </Button>
                 </DialogFooter>
