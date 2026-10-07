@@ -20,13 +20,16 @@ export class LegionService {
         const legionIconPath = await this.fileService.uploadFile(icon);
 
 
-        const legion = await this.legionModel.create({
-            ...dto,
-            planets: [],
-            icon: legionIconPath
-        })
-
-        return legion
+        try {
+            return await this.legionModel.create({
+                ...dto,
+                planets: [],
+                icon: legionIconPath
+            })
+        } catch (error) {
+            await this.fileService.deleteFile(legionIconPath)
+            throw error
+        }
     }
 
     async getAll(): Promise<Legion[]> {

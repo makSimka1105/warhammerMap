@@ -39,12 +39,18 @@ export class PlanetService {
             }
         })
         const picPath = await this.fileService.uploadFile(pic);
-        const createdPlanet = await this.planetModel.create({
-            ...planetData,
-            pic: picPath,
-            legions: legionsIds,
+        let createdPlanet: PlanetDocument;
+        try {
+            createdPlanet = await this.planetModel.create({
+                ...planetData,
+                pic: picPath,
+                legions: legionsIds,
 
-        });
+            });
+        } catch (error) {
+            await this.fileService.deleteFile(picPath);
+            throw error;
+        }
         await Promise.all(legionSelfs.map(async legion => {
 
             legion.planets.push(createdPlanet._id);

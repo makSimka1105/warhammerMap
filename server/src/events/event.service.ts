@@ -23,10 +23,16 @@ export class EventService {
         }
         const eventShotsPath = await this.fileService.uploadFiles(shots)
 
-        const event = await this.eventModel.create({
-            ...dto,
-            shots: eventShotsPath,
-        })
+        let event: EventDocument
+        try {
+            event = await this.eventModel.create({
+                ...dto,
+                shots: eventShotsPath,
+            })
+        } catch (error) {
+            await this.fileService.deleteFiles(eventShotsPath)
+            throw error
+        }
         await this.planetModel.findByIdAndUpdate(
             dto.place,
             { $push: { 'events': event._id } },
