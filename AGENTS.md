@@ -80,11 +80,11 @@ cd client && npx --no-install tsc --noEmit && npm run build
 
 Run `npx tsc` only from inside a package. From the repo root it pulls an unrelated npm package called `tsc`.
 
-API changes: run the `smoke-api` skill (`.claude/skills/smoke-api`). Inspect Mongo data through the read-only `mongodb` MCP server (`.mcp.json`) instead of ad-hoc scripts.
+API changes: run the `smoke-api` skill (`.claude/skills/smoke-api`). Inspect Mongo data through the read-only `mongodb` MCP server (`.mcp.json`, pass `connectionId: "preconfigured"`) instead of ad-hoc scripts. GridFS consistency (files nobody references, references to missing files) is the `image_refs` tool of the `image-refs` MCP server (`mcp/image-refs/server.js`), also read-only.
 
 ## Known problems
 
-- An upload that succeeds followed by a failed document insert leaves an orphan GridFS file.
+- A failed document insert no longer orphans uploads (`create` in planets/legions/events cleans up). Still open: if one of several event shots fails to upload, `uploadFiles` (`Promise.all`) leaves the others in GridFS, and a failed `legion.save()` after a planet insert is not rolled back. `image_refs` finds such files.
 - `client/lib/auth.ts` falls back to `mongodb://localhost:27017/warhammer` when `MONGO_URL` is unset (the docker build has no env), so a misconfigured deployment shows up as a connection error at runtime.
 - `DELETE /planets|/legions|/events` wipe whole collections. They are admin-only, but have no UI and no confirmation.
 - Events have no PUT.

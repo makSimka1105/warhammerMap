@@ -34,6 +34,6 @@ Reads stay public. Writes return 401 for anonymous, 403 for a user, 2xx for an a
 
 ## 3. Clean up
 
-Delete everything you created by id (`DELETE $B/api/backend/legions/<id>` as admin). The `mongodb` MCP server is read-only: use its `find` on `legions` / `planets` / `events` / `images.files` to confirm the rows are gone.
+Delete everything you created by id (`DELETE $B/api/backend/legions/<id>` as admin). The `mongodb` MCP server is read-only: use its `find` with `connectionId: "preconfigured"` (without it the tool fails validation) on `legions` / `planets` / `events` to confirm the rows are gone. Then call `image_refs` from the `image-refs` MCP server: `orphans` and `dangling` must both be empty.
 
-Done when every changed endpoint has the expected status for all three roles and the smoke rows and their GridFS files are deleted.
+Done when every changed endpoint has the expected status for all three roles and the smoke rows are deleted and `image_refs` reports no orphans.
