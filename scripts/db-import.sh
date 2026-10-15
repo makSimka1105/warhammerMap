@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Restore an archive made by db-export.sh. Existing collections with the same
-# names are dropped first. --compose restores into the mongo service of
-# docker-compose.prod.yml without exposing its port.
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
@@ -19,7 +16,7 @@ if [[ $# -ge 4 ]]; then
 fi
 
 if [[ $target == --compose ]]; then
-  docker compose -f "$(dirname "$0")/../docker-compose.prod.yml" exec -T mongo \
+  docker compose -f "$(dirname "$0")/../docker-compose.yml" exec -T mongo \
     mongorestore --gzip --archive --drop "${rename[@]}" < "$archive"
 else
   docker run --rm -i --network host mongo:7 \

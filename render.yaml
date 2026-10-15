@@ -6,8 +6,10 @@ services:
     rootDir: server
     buildCommand: npm ci && npm run build
     startCommand: node dist/main
-    healthCheckPath: /planets
+    healthCheckPath: /legions
     envVars:
+      - key: NODE_VERSION
+        value: "22"
       - key: MONGO_URL
         sync: false
       - key: FRONT_URL

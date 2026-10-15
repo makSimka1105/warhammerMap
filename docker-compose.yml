@@ -1,31 +1,66 @@
-
-networks:
-  dev:
+name: warhammer-map
 
 services:
-  nginx:
-    image: nginx:stable-alpine
-    ports:
-      - "80:80"
-      - "443:443"
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
     volumes:
-      - './nginx.conf:/etc/nginx/nginx.conf'
-      - '/etc/letsencrypt:/etc/letsencrypt'
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  server:
+    build: ./server
+    image: warhammer-map-server
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://mongo:27017/warhammer
+      FRONT_URL: http://client:3000
+      PORT: 5000
     depends_on:
-      - backend
-      - frontend
-    networks:
-      - dev
-    
+      mongo:
+        condition: service_healthy
 
-  backend:
-    build:
-      context: ./server
-    networks:
-      - dev
-
-  frontend:
+  client:
     build:
       context: ./client
-    networks:
-      - dev
+      args:
+        API_ORIGIN: http://server:5000
+        NEXT_PUBLIC_DEMO_EMAIL: ${DEMO_ADMIN_EMAIL-admin@warhammer.local}
+        NEXT_PUBLIC_DEMO_PASSWORD: ${DEMO_ADMIN_PASSWORD-warhammer40k}
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://mongo:27017/warhammer
+      BETTER_AUTH_URL: ${PUBLIC_URL:-http://localhost:3000}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-admin@warhammer.local}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_SENDER_NAME: ${EMAIL_SENDER_NAME:-WarhammerMap}
+      EMAIL_SENDER_ADDRESS: ${EMAIL_SENDER_ADDRESS:-}
+    ports:
+      - "${HTTP_PORT:-3000}:3000"
+    depends_on:
+      - server
+
+  seed:
+    build: ./server
+    image: warhammer-map-server
+    profiles: ["seed"]
+    command: ["node", "dist/scripts/seed"]
+    environment:
+      MONGO_URL: mongodb://mongo:27017/warhammer
+      FRONT_URL: http://client:3000
+      SEED_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL:-admin@warhammer.local}
+      SEED_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-warhammer40k}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      client:
+        condition: service_started
+
+volumes:
+  mongo-data:
