@@ -1,11 +1,11 @@
 import React from "react";
 import type { Metadata } from "next";
-// import "./styles/globals.css";
-import "./styles/globals.css"; // Импортируем глобальные стили
+import "./styles/globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-    title: "Map Next App",
+    title: "Warhammer Map",
+    description: "Интерактивная карта галактики Warhammer 40k: планеты, легионы и события",
 };
 
 export default function RootLayout({
@@ -22,5 +22,3 @@ export default function RootLayout({
         </html>
     );
 }
-
-//  wrapper.withRedux(RootLayout)

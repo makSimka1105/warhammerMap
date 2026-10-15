@@ -56,19 +56,14 @@
             color: rgb(196, 234, 84);
 
             &::-webkit-scrollbar {
-                display: none; /* для Chrome, Safari и Opera */
+                display: none;
             }
 
             .planetBar {
                 aspect-ratio: 573/110;
-                // height: 26%;
                 width: 95%;
                 padding: 3%;
-                // gap: -1%;
-                // padding-left: 7%;
-                // padding-top: 0.5%;
                 box-sizing: border-box;
-                // border: 3px solid black;
                 background: center no-repeat url("/assets/tablet/planetbar.png");
                 background-size: contain;
                 transition: transform 0.2s ease;
@@ -82,11 +77,6 @@
                     margin: 0; 
                     padding: 0;
                     height: 50%;
-                }
-                
-                .position {
-                    // margin: 1%;
-                    // height: auto;
                 }
                 @media (min-aspect-ratio: 567/349) {
                     .name {

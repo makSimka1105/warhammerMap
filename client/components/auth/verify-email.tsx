@@ -62,12 +62,8 @@ const VerifyEmail = (props: VerifyEmailProps) => {
 
                             <Text className="text-[12px] text-gray-500 m-0 leading-[16px]">
                                 For the Emperor
-                                
-                                
                             </Text>
                         </Section>
-
-                   
                     </Container>
                 </Body>
             </Tailwind>

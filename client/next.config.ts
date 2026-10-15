@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
   experimental: {
     serverSourceMaps: false,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   async rewrites() {
     return [
       {

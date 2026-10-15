@@ -1,53 +1,31 @@
-import { IPlanet } from "@/app/types/Planet";
+import { IPlanet } from "@/app/types/planet";
 import styles from "@/app/styles/upperInfo.module.scss";
-import { useMap } from "@/app/context/mapContext";
 import { Label } from "../ui/label";
-import { useAppSelector } from "@/hooks/useStore";
+import { useLegionsOf } from "@/hooks/useLegionsOf";
 import { ILegion } from "@/app/types/legion";
 import { fileUrl } from "@/lib/fileUrl";
 
 function isPlanet(item: IPlanet | ILegion): item is IPlanet {
-    return (
-        (item as IPlanet).pic !== undefined &&
-        (item as IPlanet).size !== undefined
-    );
+    return "pic" in item;
 }
 
-export const UpperInfo: React.FC<{ item: IPlanet | ILegion | null }> = ({
-    item,
-}) => {
-    const { currentLegions } = useMap();
-    const legions = useAppSelector((state) => state.reducerLegions.legions);
+const LegionUpperInfo: React.FC<{ legion: ILegion }> = ({ legion }) => (
+    <div className={styles.upperInfo}>
+        <div className={styles.title}>
+            <p className={styles.nameLegion}>{legion.name}</p>
+        </div>
+        <div className={styles.iconWrapper}>
+            <img
+                className={styles.icon}
+                src={fileUrl(legion.icon)}
+                alt={legion.name}
+            />
+        </div>
+    </div>
+);
 
-    if (!item) {
-        return <></>;
-    }
-
-    if (!isPlanet(item)) {
-        return (
-            <div className={styles.upperInfo}>
-                <div className={styles.title}>
-                    <p className={styles.nameLegion}>{item.name}</p>
-                </div>
-                <div className={styles.iconWrapper}>
-                    <img
-                        className={styles.icon}
-                        src={fileUrl(item.icon)}
-                        alt={item.name}
-                    />
-                </div>
-            </div>
-        );
-    }
-
-    const planet = item as IPlanet;
-    const hasImages = planet.legions && planet.legions.length > 0;
-
-    const getLegionName = (legionId: string): string => {
-        if (!legions) return "";
-        const legion = legions.find((l) => l._id === legionId);
-        return legion?.name || "";
-    };
+const PlanetUpperInfo: React.FC<{ planet: IPlanet }> = ({ planet }) => {
+    const legions = useLegionsOf(planet);
 
     return (
         <div className={styles.upperInfo}>
@@ -66,21 +44,24 @@ export const UpperInfo: React.FC<{ item: IPlanet | ILegion | null }> = ({
             </div>
 
             <div className={styles.imageContainer}>
-                {hasImages ? (
-                    currentLegions.map((id, index) => (
-                        <div key={index} className={styles.imageWrapper}>
-                            <img
-                                src={fileUrl(id)}
-                                className=" object-cover h-full" />
-                            <Label className={styles.imageLabel}>
-                                {getLegionName(planet.legions?.[index] || "")}
-                            </Label>
-                        </div>
-                    ))
-                ) : (
-                    <div></div>
-                )}
+                {legions.map((legion) => (
+                    <div key={legion._id} className={styles.imageWrapper}>
+                        <img
+                            src={fileUrl(legion.icon)}
+                            alt={legion.name}
+                            className=" object-cover h-full"
+                        />
+                        <Label className={styles.imageLabel}>{legion.name}</Label>
+                    </div>
+                ))}
             </div>
         </div>
     );
 };
+
+export const UpperInfo: React.FC<{ item: IPlanet | ILegion }> = ({ item }) =>
+    isPlanet(item) ? (
+        <PlanetUpperInfo planet={item} />
+    ) : (
+        <LegionUpperInfo legion={item} />
+    );

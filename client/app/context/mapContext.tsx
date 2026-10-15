@@ -1,4 +1,3 @@
-// MultipleFiles/MapContext.tsx
 "use client";
 import React, {
     createContext,
@@ -7,62 +6,22 @@ import React, {
     useRef,
     useCallback,
     useContext,
+    useMemo,
 } from "react";
-import { IPlanet } from "../types/Planet"; // Убедитесь, что путь правильный
+import { toast } from "sonner";
+import { IPlanet } from "../types/planet";
 import { fetchPlanets } from "@/lib/slices/planetSlices";
-import { useAppDispatch } from "../../hooks/useStore";
+import { useAppDispatch, useAppSelector } from "../../hooks/useStore";
 import { fetchLegions } from "@/lib/slices/legionSlices";
 import { ILegion } from "../types/legion";
 
-// const planetsData:IPlanet[] = [
-//     {
-//         _id:'1',
-//         type:'planet',
-//         name:'дворец императора',
-//         left: 760,
-//         top: 1279,
-//         size: 89 ,
-//         pic:'/assets/icons/terra_norings.png',
-//         ingamePosition: ' жв 870 ' ,
-//         description:'Тронный мир и столица Империума Человечества, родная планета человеческой расы, а также место рождения самого Императора Человечества. Это самое священное и почитаемое место среди всех миллионов миров, составляющих межзвездную державу человечества.',
-//         events:[]
-//     },
-//     {
-//         _id:'2',
-//         type:'planet',
-//         name: 'марс',
-//         left: 701,
-//         top: 1348,
-//         size: 59 ,
-//         pic:'/assets/icons/mars.png',
-//         ingamePosition: ' - ' ,
-//         description:'01010101001101101 01010101010100010 010 10 1001101021010101001010100100000000 11001 11001 01 0101011101110111010.',
-//         events:[]
-//     }
-// ];
+const BASE_MAP_WIDTH = 2500;
 
-// Интерфейс для результатов поиска
-export interface SearchResult {
-    id: string;
-    name: string;
-    type: "planet" | "legion";
-    data: IPlanet | ILegion; // ILegion
-}
-
-// Интерфейс для значений контекста
 interface MapContextType {
-    currentLegions: string[];
-    setCurrentLegions: React.Dispatch<React.SetStateAction<string[]>>;
-
-    currentPlanet: IPlanet |ILegion| null; // Текущая планета для взаимодействия
-    setCurrentPlanet: React.Dispatch<React.SetStateAction<IPlanet |ILegion| null>>; //
-    // dispatch:AppDispatch;
+    currentPlanet: IPlanet | ILegion | null;
+    setCurrentPlanet: (item: IPlanet | ILegion | null) => void;
     isVisible: boolean;
     setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
-    planets?: IPlanet[]; // Состояние для хранения планет
-    setPlanets?: React.Dispatch<React.SetStateAction<IPlanet[]>>; //
-    loading?: boolean; // Состояние для загрузки данных
-    setLoading?: React.Dispatch<React.SetStateAction<boolean>>; // Функция для установки состояния загрузки
     scale: number;
     offsetX: number;
     offsetY: number;
@@ -79,39 +38,51 @@ interface MapContextType {
         currentScale: number
     ) => { clampedOffsetX: number; clampedOffsetY: number };
     scaleFactor: { x: number };
-    getScaledPosition: (planet: IPlanet) => { top: number; left: number };
-
-
-    
 }
 
-// Создание контекста с значениями по умолчанию (можно использовать null и проверять в провайдере)
 export const MapContext = createContext<MapContextType | undefined>(undefined);
 
-// Провайдер контекста
 export const MapProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
     const dispatch = useAppDispatch();
+    const planets = useAppSelector((state) => state.reducerPlanets.planets);
+    const legions = useAppSelector((state) => state.reducerLegions.legions);
+
     useEffect(() => {
-        dispatch(fetchPlanets());
-        dispatch(fetchLegions());
+        dispatch(fetchPlanets())
+            .unwrap()
+            .catch(() => toast.error("Не удалось загрузить планеты"));
+        dispatch(fetchLegions())
+            .unwrap()
+            .catch(() => toast.error("Не удалось загрузить легионы"));
     }, [dispatch]);
 
-    const [currentLegions, setCurrentLegions] = useState([""]);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(true);
     const [scale, setScale] = useState<number>(1);
     const [offsetX, setOffsetX] = useState<number>(0);
     const [offsetY, setOffsetY] = useState<number>(0);
     const [isDragging, setIsDragging] = useState<boolean>(false);
-    const [currentPlanet, setCurrentPlanet] = useState<IPlanet |ILegion | null>(null); // Текущая планета для взаимодействия
 
     const viewerRef = useRef<HTMLDivElement>(null);
     const spaceMapRef = useRef<HTMLDivElement>(null);
 
-    const BASE_MAP_SIZE = { width: 2500 };
     const [scaleFactor, setScaleFactor] = useState({ x: 1 });
 
+    const currentPlanet = useMemo(() => {
+        if (!selectedId) return null;
+        return (
+            planets?.find((planet) => planet._id === selectedId) ??
+            legions?.find((legion) => legion._id === selectedId) ??
+            null
+        );
+    }, [selectedId, planets, legions]);
+
+    const setCurrentPlanet = useCallback(
+        (item: IPlanet | ILegion | null) => setSelectedId(item?._id ?? null),
+        []
+    );
 
     const clampOffsets = useCallback(
         (
@@ -154,47 +125,20 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({
     const calculateScaleFactor = useCallback(() => {
         if (spaceMapRef.current) {
             const { width } = spaceMapRef.current.getBoundingClientRect();
-
-            const xScale = width / BASE_MAP_SIZE.width;
-            setScaleFactor({ x: xScale });
-
-            // Debug logging for development only
-            if (process.env.NODE_ENV === "development") {
-                console.log(
-                    `Scale factor calculated: ${xScale}, ${width}, ${BASE_MAP_SIZE.width}`
-                );
-            }
+            setScaleFactor({ x: width / BASE_MAP_WIDTH });
         }
     }, []);
 
     useEffect(() => {
         calculateScaleFactor();
 
-        const handleResize = () => {
-            calculateScaleFactor();
-        };
-
-        window.addEventListener("resize", handleResize);
+        window.addEventListener("resize", calculateScaleFactor);
         return () => {
-            window.removeEventListener("resize", handleResize);
+            window.removeEventListener("resize", calculateScaleFactor);
         };
     }, [calculateScaleFactor]);
 
-    const getScaledPosition = useCallback(
-        (planet: IPlanet) => {
-            return {
-                top: planet.top * scaleFactor.x,
-                left: planet.left * scaleFactor.x,
-            };
-        },
-        [scaleFactor.x]
-    );
-
     const contextValue: MapContextType = {
-
-
-        currentLegions,
-        setCurrentLegions,
         isVisible,
         setIsVisible,
         currentPlanet,
@@ -211,7 +155,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({
         spaceMapRef,
         clampOffsets,
         scaleFactor,
-        getScaledPosition,
     };
 
     return (
@@ -221,7 +164,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({
     );
 };
 
-// Хук для удобного использования контекста
 export const useMap = () => {
     const context = useContext(MapContext);
     if (context === undefined) {

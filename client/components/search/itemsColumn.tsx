@@ -1,23 +1,21 @@
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import React, { useEffect, useState } from 'react';
-import { PlanetBar } from '@/components/search/planetBar';
-import { IPlanet } from '@/app/types/Planet';
-import { ILegion } from '@/app/types/legion';
-import { LegionBar } from './legionsBar';
-import { PlanetData } from '../admin/planet/NewPlanetTab';
-import { PlanetEditDrawer } from '../admin/planet/editPlanet';
-import { authClient } from '@/lib/auth-client';
-import { createEvent, deletePlanet, fetchPlanets, updatePlanet } from '@/lib/slices/planetSlices';
-import { useAppDispatch } from '@/hooks/useStore';
-import { DeletePlanetDialog } from '../admin/planet/deletePlanet';
-import { toast } from 'sonner';
-import { LegionEditDrawer } from '../admin/legion/editLegion';
-import { DeleteLegionDialog } from '../admin/legion/deleteLegion';
-import { deleteLegion, fetchLegions, updateLegion } from '@/lib/slices/legionSlices';
-import { LegionData } from '../admin/legion/NewLegionTab';
-import { EventCreateDrawer } from '../admin/EventCreateDrawer';
-
-
+import React, { useState } from "react";
+import { PlanetBar } from "@/components/search/planetBar";
+import { IPlanet } from "@/app/types/planet";
+import { ILegion } from "@/app/types/legion";
+import { LegionBar } from "./legionBar";
+import { PlanetData } from "../admin/planet/NewPlanetTab";
+import { PlanetEditDrawer } from "../admin/planet/editPlanet";
+import { createEvent, deletePlanet, updatePlanet } from "@/lib/slices/planetSlices";
+import { useAppDispatch } from "@/hooks/useStore";
+import { DeletePlanetDialog } from "../admin/planet/deletePlanet";
+import { toast } from "sonner";
+import { LegionEditDrawer } from "../admin/legion/editLegion";
+import { DeleteLegionDialog } from "../admin/legion/deleteLegion";
+import { deleteLegion, updateLegion } from "@/lib/slices/legionSlices";
+import { refreshCatalog } from "@/lib/slices/refreshCatalog";
+import { LegionData } from "../admin/legion/NewLegionTab";
+import { EventCreateDrawer } from "../admin/EventCreateDrawer";
 
 interface PlanetsListProps {
     planets: IPlanet[] | null;
@@ -27,279 +25,141 @@ interface LegionsListProps {
     legions: ILegion[] | null;
 }
 
+const toPlanetData = (planet: IPlanet): PlanetData => ({
+    id: planet._id,
+    name: planet.name,
+    ingamePosition: planet.ingamePosition ?? "",
+    description: planet.description ?? "",
+    left: String(planet.left),
+    top: String(planet.top),
+    size: String(planet.size),
+    pic: null,
+    legion1: planet.legions?.[0] ?? "",
+    legion2: planet.legions?.[1] ?? "",
+});
+
+const toLegionData = (legion: ILegion): LegionData => ({
+    id: legion._id,
+    name: legion.name,
+    description: legion.description ?? "",
+    icon: null,
+});
 
 export function PlanetsList({ planets }: PlanetsListProps) {
-
     const admin = useIsAdmin();
     const dispatch = useAppDispatch();
 
     const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [deletePlanetId, setDeletePlanetId] = React.useState<string | null>(null);
-    const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
-
-
-    const openDeleteDialog = (id: string) => {
-        setDeletePlanetId(id);
-        setIsDeleteOpen(true);
-    };
-
-
-    const closeDeleteDialog = () => {
-        setDeletePlanetId(null);
-        setIsDeleteOpen(false);
-    };
-
-
-
-    const handleDelete = async (id: string) => {
-        try {
-            const resultAction = await dispatch(deletePlanet(id));
-
-            if (deletePlanet.fulfilled.match(resultAction)) {
-                toast.success("Планета успешно удалена");
-                dispatch(fetchPlanets());
-            } else {
-                // Если ошибка
-                toast.error("Ошибка при удалении планеты");
-            }
-        } catch (error) {
-            toast.error("Произошла ошибка при удалении");
-        }
-    };
-    const handleClickDelete = (id: string) => {
-        closeDeleteDialog()
-        openDeleteDialog(id)
-
-    };
-
-    const mapPlanetToPlanetData = (planet: IPlanet): PlanetData => ({
-        id: planet._id,
-        name: planet.name,
-        ingamePosition: planet.ingamePosition || "",
-        description: planet.description,
-        left: planet.left.toString(),
-        top: planet.top.toString(),
-        size: planet.size.toString(),
-        pic: null,
-        legion1: planet.legions ? planet.legions[0] : undefined,
-        legion2: planet.legions ? planet.legions[1] : undefined,
-        // если в IPlanet нет файла, оставляем null
-    });
-    const handleEditClick = (planet: IPlanet) => {
-
-        const planetData = mapPlanetToPlanetData(planet);
-        setSelectedPlanet(planetData);
-        setIsDrawerOpen(true);
-    };
-
-
-    const handleClose = () => {
-        setSelectedPlanet(null);
-        setIsDrawerOpen(false);
-    };
-
-
-    const handleSave = async (formData: FormData, id: string) => {
-        try {
-            handleClose();
-            const resultAction = await dispatch(updatePlanet({ updatedPlanet: formData, id }));
-
-            if (updatePlanet.fulfilled.match(resultAction)) {
-                toast.success(
-                    "Планета успешно обновлена");
-                dispatch(fetchPlanets());
-            } else {
-                toast.error("Ошибка при обновлении планеты");
-            }
-        } catch (error) {
-            toast.error("Произошла ошибка");
-        }
-
-        console.log("Сохранить данные:", formData);
-    };
-    const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
+    const [deletePlanetId, setDeletePlanetId] = useState<string | null>(null);
     const [eventPlanetId, setEventPlanetId] = useState<string | null>(null);
 
-    const openEventDrawer = (planetId: string) => {
-        setEventPlanetId(planetId);
-        setIsEventDrawerOpen(true);
-        console.log(isEventDrawerOpen)
+    const handleDelete = async (id: string) => {
+        const result = await dispatch(deletePlanet(id));
+        if (deletePlanet.fulfilled.match(result)) {
+            toast.success("Планета успешно удалена");
+            dispatch(refreshCatalog());
+        } else {
+            toast.error(result.payload ?? "Ошибка при удалении планеты");
+        }
     };
 
-    const closeEventDrawer = () => {
-        setEventPlanetId(null);
-        setIsEventDrawerOpen(false);
-        console.log(isEventDrawerOpen)
-
+    const handleSave = async (formData: FormData, id: string) => {
+        const result = await dispatch(updatePlanet({ updatedPlanet: formData, id }));
+        if (updatePlanet.fulfilled.match(result)) {
+            toast.success("Планета успешно обновлена");
+            setSelectedPlanet(null);
+            dispatch(refreshCatalog());
+        } else {
+            toast.error(result.payload ?? "Ошибка при обновлении планеты");
+        }
     };
 
     const handleSaveEvent = async (formData: FormData) => {
-        try {
-            closeEventDrawer();
-            const resultAction = await dispatch(createEvent(formData));
-            if (createEvent.fulfilled.match(resultAction)) {
-                toast.success("Ивент успешно создан");
-                dispatch(fetchPlanets());
-            } else {
-                toast.error("Ошибка при создании ивента");
-            }
-        } catch (error) {
-            toast.error("Произошла ошибка");
+        const result = await dispatch(createEvent(formData));
+        if (createEvent.fulfilled.match(result)) {
+            toast.success("Ивент успешно создан");
+            setEventPlanetId(null);
+            dispatch(refreshCatalog());
+        } else {
+            toast.error(result.payload ?? "Ошибка при создании ивента");
         }
     };
-
-
-
-
-    // const handleSaveEvent = async (newEvent: FormData) => {
-    //     try {
-    //         handleClose();
-    //         const resultAction = await dispatch(createEvent(newEvent));
-
-    //         if (createEvent.fulfilled.match(resultAction)) {
-    //             toast.success(
-    //                 "ивент успешно создан");
-    //             dispatch(fetchPlanets());
-    //         } else {
-    //             toast.error("Ошибка при создании ивента");
-    //         }
-    //     } catch (error) {
-    //         toast.error("Произошла ошибка");
-    //     }
-
-    //     console.log("Сохранить данные:", newEvent);
-    // };
-
 
     return (
         <>
             {planets && planets.length > 0 ? (
-                planets.map((planet, idx) => (
-                    <>
-
-                        <PlanetBar    onCreateEvent={openEventDrawer} ondelete={handleClickDelete} onclick={handleEditClick} key={planet._id || idx} planet={planet} />
-                    </>
+                planets.map((planet) => (
+                    <PlanetBar
+                        key={planet._id}
+                        planet={planet}
+                        onCreateEvent={setEventPlanetId}
+                        onDelete={setDeletePlanetId}
+                        onEdit={(item) => setSelectedPlanet(toPlanetData(item))}
+                    />
                 ))
             ) : (
                 <div>планеты не найдены.</div>
             )}
-            {admin && <PlanetEditDrawer
-                initialData={selectedPlanet}
-                isOpen={isDrawerOpen}
-                onClose={handleClose}
-                onSave={handleSave}
-            />}
-            {admin &&
-                <DeletePlanetDialog
-
-                    planetId={deletePlanetId}
-                    isOpen={isDeleteOpen}
-                    onClose={closeDeleteDialog}
-                    onDelete={handleDelete}
-                />}
-            {admin && <EventCreateDrawer
-                isOpen={isEventDrawerOpen}
-                onClose={closeEventDrawer}
-                onSave={handleSaveEvent}
-                planetId={eventPlanetId}
-            />}
-
-
+            {admin && (
+                <>
+                    <PlanetEditDrawer
+                        initialData={selectedPlanet}
+                        onClose={() => setSelectedPlanet(null)}
+                        onSave={handleSave}
+                    />
+                    <DeletePlanetDialog
+                        planetId={deletePlanetId}
+                        onClose={() => setDeletePlanetId(null)}
+                        onDelete={handleDelete}
+                    />
+                    <EventCreateDrawer
+                        planetId={eventPlanetId}
+                        onClose={() => setEventPlanetId(null)}
+                        onSave={handleSaveEvent}
+                    />
+                </>
+            )}
         </>
     );
 }
 
-
-
-
-
-
 export function LegionsList({ legions }: LegionsListProps) {
     const admin = useIsAdmin();
-
     const dispatch = useAppDispatch();
 
     const [selectedLegion, setSelectedLegion] = useState<LegionData | null>(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [deleteLegionId, setDeleteLegionId] = useState<string | null>(null);
-    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
-    const openDeleteDialog = (id: string) => {
-        setDeleteLegionId(id);
-        setIsDeleteOpen(true);
-    };
-
-    const closeDeleteDialog = () => {
-        setDeleteLegionId(null);
-        setIsDeleteOpen(false);
-    };
 
     const handleDelete = async (id: string) => {
-        try {
-            const resultAction = await dispatch(deleteLegion(id));
-
-            if (deleteLegion.fulfilled.match(resultAction)) {
-                toast.success("Легион успешно удалён");
-                dispatch(fetchLegions());
-            } else {
-                toast.error("Ошибка при удалении легиона");
-            }
-        } catch (error) {
-            toast.error("Произошла ошибка при удалении");
+        const result = await dispatch(deleteLegion(id));
+        if (deleteLegion.fulfilled.match(result)) {
+            toast.success("Легион успешно удалён");
+            dispatch(refreshCatalog());
+        } else {
+            toast.error(result.payload ?? "Ошибка при удалении легиона");
         }
-    };
-
-    const handleClickDelete = (id: string) => {
-        closeDeleteDialog();
-        openDeleteDialog(id);
-    };
-
-    const mapLegionToLegionData = (legion: ILegion): LegionData => ({
-        id: legion._id,
-        name: legion.name,
-        description: legion.description || "",
-        icon: null, // если в ILegion нет файла, оставляем null
-    });
-
-    const handleEditClick = (legion: ILegion) => {
-        const legionData = mapLegionToLegionData(legion);
-        setSelectedLegion(legionData);
-        setIsDrawerOpen(true);
-    };
-
-    const handleClose = () => {
-        setSelectedLegion(null);
-        setIsDrawerOpen(false);
     };
 
     const handleSave = async (formData: FormData, id: string) => {
-        try {
-            handleClose();
-            const resultAction = await dispatch(updateLegion({ updatedLegion: formData, id }));
-
-            if (updateLegion.fulfilled.match(resultAction)) {
-                toast.success("Легион успешно обновлен");
-                dispatch(fetchLegions());
-            } else {
-                toast.error("Ошибка при обновлении легиона");
-            }
-        } catch (error) {
-            toast.error("Произошла ошибка");
+        const result = await dispatch(updateLegion({ updatedLegion: formData, id }));
+        if (updateLegion.fulfilled.match(result)) {
+            toast.success("Легион успешно обновлён");
+            setSelectedLegion(null);
+            dispatch(refreshCatalog());
+        } else {
+            toast.error(result.payload ?? "Ошибка при обновлении легиона");
         }
-
-        console.log("Сохранить данные:", formData);
     };
 
     return (
         <>
             {legions && legions.length > 0 ? (
-                legions.map((legion, idx) => (
+                legions.map((legion) => (
                     <LegionBar
-                        key={legion._id || idx}
+                        key={legion._id}
                         legion={legion}
-                        onclick={handleEditClick}
-                        ondelete={handleClickDelete}
+                        onEdit={(item) => setSelectedLegion(toLegionData(item))}
+                        onDelete={setDeleteLegionId}
                     />
                 ))
             ) : (
@@ -307,21 +167,18 @@ export function LegionsList({ legions }: LegionsListProps) {
             )}
 
             {admin && (
-                <LegionEditDrawer
-                    initialData={selectedLegion}
-                    isOpen={isDrawerOpen}
-                    onClose={handleClose}
-                    onSave={handleSave}
-                />
-            )}
-
-            {admin && (
-                <DeleteLegionDialog
-                    legionId={deleteLegionId}
-                    isOpen={isDeleteOpen}
-                    onClose={closeDeleteDialog}
-                    onDelete={handleDelete}
-                />
+                <>
+                    <LegionEditDrawer
+                        initialData={selectedLegion}
+                        onClose={() => setSelectedLegion(null)}
+                        onSave={handleSave}
+                    />
+                    <DeleteLegionDialog
+                        legionId={deleteLegionId}
+                        onClose={() => setDeleteLegionId(null)}
+                        onDelete={handleDelete}
+                    />
+                </>
             )}
         </>
     );

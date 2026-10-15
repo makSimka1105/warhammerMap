@@ -1,161 +1,86 @@
 import { ILegion } from "@/app/types/legion";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { api } from "@/lib/api";
+import { api, apiErrorMessage } from "@/lib/api";
 
-const userAPI = "/legions";
+const legionsUrl = "/legions";
 
-// Создание асинхронного thunk для получения данных
 export const fetchLegions = createAsyncThunk(
     "legions/fetchLegions",
     async (): Promise<ILegion[]> => {
-        const response = await api.get<ILegion[]>(userAPI);
-        const data = response.data;
-        console.log("легионы запрошены:", data);
-        return data; // Возвращаем данные для сохранения в хранилище
-    }
-);
-
-// Создание нового легиона
-export const createLegion = createAsyncThunk(
-    "legions/createLegion",
-    async (newLegion:FormData): Promise<ILegion> => {
-        const response = await api.post(userAPI, newLegion);
-        console.log("легион создан:", response.data);
+        const response = await api.get<ILegion[]>(legionsUrl);
         return response.data;
     }
 );
 
-// Обновление легиона
-export const updateLegion = createAsyncThunk(
-  "legions/updateLegion",
-  async (payload: { updatedLegion: FormData; id: string }): Promise<ILegion> => {
-    const { updatedLegion, id } = payload;
-    console.log("получены данные лкгиона:", updatedLegion);
-
-    const response = await api.put<ILegion>(`${userAPI}/${id}`, updatedLegion);
-    console.log("планета обновлена:", response.data);
-    return response.data;
-  }
-);
-
-
-
-// Удаление легиона
-export const deleteLegion = createAsyncThunk(
-    "legions/deleteLegion",
-    async (legionId: string | number): Promise<string | number> => {
-        await api.delete(`${userAPI}/${legionId}`);
-        console.log("легион удален:", legionId);
-        return legionId;
+export const createLegion = createAsyncThunk<
+    void,
+    FormData,
+    { rejectValue: string }
+>("legions/createLegion", async (newLegion, { rejectWithValue }) => {
+    try {
+        await api.post(legionsUrl, newLegion);
+    } catch (error) {
+        return rejectWithValue(
+            apiErrorMessage(error, "Ошибка при создании легиона")
+        );
     }
-);
+});
+
+export const updateLegion = createAsyncThunk<
+    void,
+    { updatedLegion: FormData; id: string },
+    { rejectValue: string }
+>("legions/updateLegion", async ({ updatedLegion, id }, { rejectWithValue }) => {
+    try {
+        await api.put(`${legionsUrl}/${id}`, updatedLegion);
+    } catch (error) {
+        return rejectWithValue(
+            apiErrorMessage(error, "Ошибка при обновлении легиона")
+        );
+    }
+});
+
+export const deleteLegion = createAsyncThunk<
+    void,
+    string,
+    { rejectValue: string }
+>("legions/deleteLegion", async (legionId, { rejectWithValue }) => {
+    try {
+        await api.delete(`${legionsUrl}/${legionId}`);
+    } catch (error) {
+        return rejectWithValue(
+            apiErrorMessage(error, "Ошибка при удалении легиона")
+        );
+    }
+});
 
 interface LegionsState {
     legions: ILegion[] | null;
     loading: boolean;
-    error: string | null;
 }
 
 const initialState: LegionsState = {
     legions: null,
-    loading: false,
-    error: null,
+    loading: true,
 };
 
-// Создание среза
 const legionSlice = createSlice({
     name: "legions",
     initialState,
-    reducers: {
-        // Получение конкретного легиона по ID
-        getLegion(state, action) {
-                return action.payload
-        },
-        // Очистка ошибок
-        clearError(state) {
-            state.error = null;
-        },
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
-            // Получение всех легионов
             .addCase(fetchLegions.pending, (state) => {
-                state.loading = true;
-                state.error = null;
+                state.loading = state.legions === null;
             })
             .addCase(fetchLegions.fulfilled, (state, action) => {
                 state.loading = false;
                 state.legions = action.payload;
             })
-            .addCase(fetchLegions.rejected, (state, action) => {
+            .addCase(fetchLegions.rejected, (state) => {
                 state.loading = false;
-                state.error =
-                    action.error.message || "Ошибка при получении легионов";
-            })
-
-            // Создание легиона
-            .addCase(createLegion.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(createLegion.fulfilled, (state, action) => {
-                state.loading = false;
-                if (state.legions) {
-                    state.legions.push(action.payload);
-                } else {
-                    state.legions = [action.payload];
-                }
-            })
-            .addCase(createLegion.rejected, (state, action) => {
-                state.loading = false;
-                state.error =
-                    action.error.message || "Ошибка при создании легиона";
-            })
-
-            // Обновление легиона
-            .addCase(updateLegion.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(updateLegion.fulfilled, (state, action) => {
-                state.loading = false;
-                if (state.legions) {
-                    const index = state.legions.findIndex(
-                        (legion) => legion._id === action.payload._id
-                    );
-                    if (index !== -1) {
-                        state.legions[index] = action.payload;
-                    }
-                }
-            })
-            .addCase(updateLegion.rejected, (state, action) => {
-                state.loading = false;
-                state.error =
-                    action.error.message || "Ошибка при обновлении легиона";
-            })
-
-            // Удаление легиона
-            .addCase(deleteLegion.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(deleteLegion.fulfilled, (state, action) => {
-                state.loading = false;
-                if (state.legions) {
-                    state.legions = state.legions.filter(
-                        (legion) => legion._id !== action.payload
-                    );
-                }
-            })
-            .addCase(deleteLegion.rejected, (state, action) => {
-                state.loading = false;
-                state.error =
-                    action.error.message || "Ошибка при удалении легиона";
             });
     },
 });
 
-// Экспортируем редюсер и действия
-const { actions, reducer } = legionSlice;
-export const { getLegion, clearError } = actions;
-export default reducer;
+export default legionSlice.reducer;

@@ -5,57 +5,22 @@ import { useRouter } from "next/navigation";
 import { useMap } from "@/app/context/mapContext";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 
-enum BlockChoise {
+export enum BlockChoice {
   map = 'map',
   dashboard = 'dashboard',
 }
 
 interface BurgerMenuProps {
-    currentBlock: BlockChoise;
-    setCurrentBlock: Dispatch<SetStateAction<BlockChoise>>;
+    setCurrentBlock: Dispatch<SetStateAction<BlockChoice>>;
 }
 
-const BurgerMenu: React.FC<BurgerMenuProps> = ({currentBlock,setCurrentBlock}) => {
+const BurgerMenu: React.FC<BurgerMenuProps> = ({ setCurrentBlock }) => {
     const [isActive, setIsActive] = useState(false);
     const router = useRouter();
     const { isVisible, setIsVisible } = useMap();
-    const handleSwitch=useCallback(
-        (block:BlockChoise)=>{
-            try {
-                if(block==BlockChoise.map ){
-                    setCurrentBlock(BlockChoise.map)
-                }
-
-                if(block==BlockChoise.dashboard ){
-
-                    setCurrentBlock(BlockChoise.dashboard)
-                }
-
-                
-            } catch (error) {
-                console.log(error)
-            }
-        },[currentBlock,setCurrentBlock]
-    )
-
 
     const handleRouter = useCallback(
-        (path: string) => {
-            try {
-                router.push(path);
-            } catch (error) {
-                console.error("Navigation error:", error);
-                // Fallback: try to navigate using window.location if router fails
-                try {
-                    window.location.href = path;
-                } catch (fallbackError) {
-                    console.error(
-                        "Fallback navigation also failed:",
-                        fallbackError
-                    );
-                }
-            }
-        },
+        (path: string) => router.push(path),
         [router]
     );
 
@@ -63,14 +28,8 @@ const BurgerMenu: React.FC<BurgerMenuProps> = ({currentBlock,setCurrentBlock}) =
         setIsActive(!isActive);
     }, [isActive]);
 
-
-
     const handleBorderToggle = useCallback(() => {
-        try {
-            setIsVisible(!isVisible);
-        } catch (error) {
-            console.error("Error toggling border visibility:", error);
-        }
+        setIsVisible(!isVisible);
     }, [isVisible, setIsVisible]);
 
     const handleKeyDown = useCallback(
@@ -87,14 +46,12 @@ const BurgerMenu: React.FC<BurgerMenuProps> = ({currentBlock,setCurrentBlock}) =
         {
             id: "home",
             label: "Navigate to home",
-            path: "/",
-            action: () => handleSwitch(BlockChoise.map),
+            action: () => setCurrentBlock(BlockChoice.map),
         },
         {
             id: "search",
             label: "Open search",
-            path: "/search",
-            action: () => handleSwitch(BlockChoise.dashboard),
+            action: () => setCurrentBlock(BlockChoice.dashboard),
         },
         {
             id: "border",
@@ -103,8 +60,7 @@ const BurgerMenu: React.FC<BurgerMenuProps> = ({currentBlock,setCurrentBlock}) =
         },
         {
             id: "admin",
-            label: "Navigate to login ",
-            path: "/login",
+            label: "Navigate to login",
             action: () => handleRouter("/login"),
         },
     ];

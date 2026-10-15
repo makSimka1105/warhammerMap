@@ -27,11 +27,15 @@ import { toast } from "sonner";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+
+const demoEmail = process.env.NEXT_PUBLIC_DEMO_EMAIL;
+const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+
 const formSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
     password: z
         .string()
-        .min(6, { message: "Password must be at least 8 characters long" }),
+        .min(8, { message: "Password must be at least 8 characters long" }),
 });
 
 export function LoginForm({
@@ -55,10 +59,8 @@ export function LoginForm({
                 email: values.email,
                 password: values.password,
             });
-            if ((result as any)?.error) {
-                throw new Error(
-                    (result as any).error?.message || "Sign-in failed"
-                );
+            if (result.error) {
+                throw new Error(result.error.message || "Sign-in failed");
             }
             toast.success("Signed in successfully.");
             setIsNavigating(true);
@@ -82,10 +84,32 @@ export function LoginForm({
                     <CardTitle>Login to your account</CardTitle>
                     <CardDescription>
                         Enter your email below to login to your account
-                        
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {demoEmail && demoPassword && (
+                        <div className="mb-6 flex items-center justify-between gap-3 rounded-md border border-dashed p-3 text-sm">
+                            <div className="min-w-0">
+                                <p className="font-medium">Demo admin</p>
+                                <p className="truncate text-muted-foreground">
+                                    {demoEmail} / {demoPassword}
+                                </p>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    form.reset({
+                                        email: demoEmail,
+                                        password: demoPassword,
+                                    })
+                                }
+                            >
+                                Fill form
+                            </Button>
+                        </div>
+                    )}
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
@@ -118,12 +142,6 @@ export function LoginForm({
                                         <Label htmlFor="password">
                                             Password
                                         </Label>
-                                        <a
-                                            href="#"
-                                            className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                                        >
-                                            Forgot your password?
-                                        </a>
                                     </div>
                                     <FormField
                                         control={form.control}

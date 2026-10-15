@@ -1,54 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { LegionData, NewLegionTab } from "./NewLegionTab";
+import { NewLegionTab, LegionData } from "./NewLegionTab";
 
 interface LegionEditDrawerProps {
-  initialData: LegionData | null; // Данные планеты для редактирования
-  isOpen: boolean;                // Флаг открытия дровера
-  onClose: () => void;            // Коллбек закрытия
-  onSave: (formData: FormData,id:string) => void; // Коллбек сохранения
+    initialData: LegionData | null;
+    onClose: () => void;
+    onSave: (formData: FormData, id: string) => void;
 }
 
 export const LegionEditDrawer: React.FC<LegionEditDrawerProps> = ({
-  initialData,
-  isOpen,
-  onClose,
-  onSave,
-}) => {
-  // Локальное состояние для передачи в форму
-  const [legionData, setLegionData] = useState<LegionData | null>(initialData);
+    initialData,
+    onClose,
+    onSave,
+}) => (
+    <Drawer open={initialData !== null} onOpenChange={(open) => !open && onClose()}>
+        <DrawerContent className="flex flex-col h-full max-w-xl">
+            <DrawerHeader>
+                <DrawerTitle>Редактировать легион</DrawerTitle>
+                <DrawerDescription>Измените данные легиона и сохраните</DrawerDescription>
+            </DrawerHeader>
 
-  // При изменении initialData обновлять planetData
-  useEffect(() => {
-    setLegionData(initialData);
-  }, [initialData]);
+            <div className="flex-1 overflow-y-auto p-6">
+                {initialData && (
+                    <NewLegionTab
+                        initialValues={initialData}
+                        onSubmit={(formData) => onSave(formData, initialData.id ?? "")}
+                    />
+                )}
+            </div>
 
-  if (!legionData) return null; // если данных нет, ничего не показываем
-
-  return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="flex flex-col h-full max-w-xl">
-        <DrawerHeader>
-          <DrawerTitle>Редактировать легион</DrawerTitle>
-          <DrawerDescription>Измените данные легиона и сохраните</DrawerDescription>
-        </DrawerHeader>
-
-        <div className="flex-1 overflow-y-auto p-6">
-          <NewLegionTab
-            initialValues={legionData}
-            onSubmit={(formData:FormData) => {
-              onSave(formData,legionData.id||"");
-            }}
-          />
-        </div>
-
-        <DrawerFooter className="flex-shrink-0">
-          <DrawerClose asChild>
-            <Button>Закрыть</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
+            <DrawerFooter className="flex-shrink-0">
+                <DrawerClose asChild>
+                    <Button>Закрыть</Button>
+                </DrawerClose>
+            </DrawerFooter>
+        </DrawerContent>
     </Drawer>
-  );
-};
+);

@@ -41,9 +41,9 @@ export const auth = betterAuth({
         sendVerificationEmail: async ({ user, url }) => {
             await getResend().emails.send({
                 from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_SENDER_ADDRESS}>`,
-                to: [user.email ],
+                to: [user.email],
                 subject: "Verify your email",
-                react: VerifyEmail({ username: user.name, verifyUrl:url }),
+                react: VerifyEmail({ username: user.name, verifyUrl: url }),
             });
         },
     },
@@ -61,7 +61,7 @@ export const auth = betterAuth({
     },
 
     session: {
-        expiresIn: 60 * 60 * 24, // 1 days
+        expiresIn: 60 * 60 * 24,
         updateAge: 60 * 60 * 24,
         cookieCache: {
             enabled: true,

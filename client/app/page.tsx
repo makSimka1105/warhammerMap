@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Map from "@/components/map/mapComp";
@@ -8,16 +6,11 @@ import UpperMenu from "@/components/ui/upperMenu";
 import { MapProvider } from "./context/mapContext";
 import StoreProvider from "../components/StoreProvider";
 import { useState } from "react";
-import BurgerMenu from "@/components/ui/burgerMenu";
-
+import BurgerMenu, { BlockChoice } from "@/components/ui/burgerMenu";
 import DatabaseTablet from "@/components/search/databaseTablet";
-enum BlockChoise {
-  map = 'map',
-  dashboard = 'dashboard',
-}
 
 export default function Home() {
-  const [currentBlock, setCurrentBlock] = useState<BlockChoise>(BlockChoise.map)
+  const [currentBlock, setCurrentBlock] = useState<BlockChoice>(BlockChoice.map)
 
   return (
     <div className="outer-container">
@@ -28,15 +21,10 @@ export default function Home() {
           <div className="inner-container">
             <div className="squire-area">
               <div className=" flex absolute top-1 left-4 z-index-10">
-
-                <BurgerMenu
-                  currentBlock={currentBlock}
-                  setCurrentBlock={setCurrentBlock}
-                />
-
+                <BurgerMenu setCurrentBlock={setCurrentBlock} />
               </div>
-              {currentBlock == BlockChoise.map && <Map />}
-              {currentBlock == BlockChoise.dashboard && <DatabaseTablet />}
+              {currentBlock == BlockChoice.map && <Map />}
+              {currentBlock == BlockChoice.dashboard && <DatabaseTablet />}
             </div>
             <div className="rectangular-area">
               <InfoSidebar />

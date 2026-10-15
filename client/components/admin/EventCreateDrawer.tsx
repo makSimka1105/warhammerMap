@@ -1,86 +1,112 @@
-import React, { useState } from 'react';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Button } from '../ui/button';
+import React, { useState } from "react";
+import { toast } from "sonner";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { IMAGE_ACCEPT, imageError } from "@/lib/imageFile";
+
+const MAX_SHOTS = 4;
 
 interface EventCreateDrawerProps {
-    isOpen: boolean;
+    planetId: string | null;
     onClose: () => void;
     onSave: (formData: FormData) => void;
-    planetId: string | null; // сюда будем передавать ID планеты из которой вызвали
 }
 
-export function EventCreateDrawer({ isOpen, onClose, onSave, planetId }: EventCreateDrawerProps) {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [link, setLink] = useState('');
+interface EventFormProps {
+    planetId: string;
+    onSave: (formData: FormData) => void;
+}
+
+function EventForm({ planetId, onSave }: EventFormProps) {
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [link, setLink] = useState("");
     const [screenshots, setScreenshots] = useState<File[]>([]);
 
     const handleScreenshotsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files) return;
-        const filesArray = Array.from(e.target.files).slice(0, 4);
-        setScreenshots(filesArray);
-        console.log("Выбранные файлы:", filesArray);
+        setScreenshots(Array.from(e.target.files ?? []));
     };
 
-    const handleSubmit = () => {
-        if (!planetId) {
-            alert("Не выбрана планета");
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!title.trim()) {
+            toast.error("Укажите название ивента");
             return;
         }
+        if (screenshots.length > MAX_SHOTS) {
+            toast.error(`Можно прикрепить не больше ${MAX_SHOTS} скриншотов`);
+            return;
+        }
+        const shotError = screenshots.map(imageError).find(Boolean);
+        if (shotError) {
+            toast.error(shotError);
+            return;
+        }
+
         const formData = new FormData();
-        formData.append('name', title);
-        formData.append('description', description);
-        formData.append('link', link);
-        formData.append('place', planetId);
-        screenshots.forEach(file => formData.append('shots', file as File));
-        console.log(screenshots)       // screenshots.forEach((file, idx) => {
-        //     formData.append(`screenshots[${idx}]`, file);
-        // });
+        formData.append("name", title.trim());
+        formData.append("description", description);
+        formData.append("link", link);
+        formData.append("place", planetId);
+        screenshots.forEach((file) => formData.append("shots", file));
         onSave(formData);
     };
 
-
-    // return (
-    //     // <div className="drawer-overlay">
-    //         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-
-    //         <div className="drawer-content">
-    //             <h2>Создать ивент</h2>
-    //             <input placeholder="Название" value={title} onChange={e => setTitle(e.target.value)} />
-    //             <textarea placeholder="Описание" value={description} onChange={e => setDescription(e.target.value)} />
-    //             <input placeholder="Ссылка" value={link} onChange={e => setLink(e.target.value)} />
-    //             <input type="file" multiple accept="image/*" onChange={handleScreenshotsChange} />
-    //             <button onClick={handleSubmit}>Создать</button>
-    //             <button onClick={onClose}>Закрыть</button>
-    //         </div>
-
-    //         </Dialog>
-    //     // </div>
-    // );
-
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <form onSubmit={handleSubmit} className="grid gap-4">
+            <div className="grid gap-3">
+                <Label htmlFor="event-name">Название</Label>
+                <Input id="event-name" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            </div>
+            <div className="grid gap-3">
+                <Label htmlFor="event-description">Описание</Label>
+                <Input id="event-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <div className="grid gap-3">
+                <Label htmlFor="event-link">Ссылка</Label>
+                <Input
+                    id="event-link"
+                    type="url"
+                    pattern="https?://.+"
+                    placeholder="https://"
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                />
+            </div>
+            <div className="grid gap-3">
+                <Label htmlFor="event-shots">Скриншоты</Label>
+                <Input
+                    id="event-shots"
+                    type="file"
+                    multiple
+                    accept={IMAGE_ACCEPT}
+                    onChange={handleScreenshotsChange}
+                />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">Отмена</Button>
+                </DialogClose>
+                <Button type="submit">Сохранить</Button>
+            </DialogFooter>
+        </form>
+    );
+}
+
+export function EventCreateDrawer({ planetId, onClose, onSave }: EventCreateDrawerProps) {
+    return (
+        <Dialog open={planetId !== null} onOpenChange={(open) => !open && onClose()}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Создать ивент</DialogTitle>
                     <DialogDescription>
-                        Заполните данные ивента и прикрепите до 4 скриншотов.
+                        Заполните данные ивента и прикрепите до {MAX_SHOTS} скриншотов.
                     </DialogDescription>
                 </DialogHeader>
-                <input placeholder="Название" value={title} onChange={e => setTitle(e.target.value)} />
-                <input placeholder="Описание" value={description} onChange={e => setDescription(e.target.value)} />
-                <input placeholder="Ссылка" value={link} onChange={e => setLink(e.target.value)} />
-                <input type="file" multiple accept="image/*" onChange={handleScreenshotsChange} />
-
-
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="outline">Отмена</Button>
-                    </DialogClose>
-                    <Button onClick={handleSubmit}>
-                        сохранить
-                    </Button>
-                </DialogFooter>
+                {planetId && <EventForm planetId={planetId} onSave={onSave} />}
             </DialogContent>
         </Dialog>
     );

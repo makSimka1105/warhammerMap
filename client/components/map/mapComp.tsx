@@ -1,10 +1,8 @@
-// MultipleFiles/mapComp.tsx
 "use client";
 import React, { useEffect, useRef, useCallback } from "react";
 import styles from "@/app/styles/map.module.scss";
 import { useMap } from "@/app/context/mapContext";
 import { useAppSelector } from "@/hooks/useStore";
-import BurgerMenu from "../ui/burgerMenu";
 import BorderComponent from "./mainBorders";
 import Planet from "./planet";
 
@@ -22,12 +20,11 @@ const Map: React.FC = () => {
         viewerRef,
         spaceMapRef,
         clampOffsets,
-    } = useMap(); // Используем хук для получения значений из контекста
-    const { planets, loading, error } = useAppSelector(
+    } = useMap();
+    const { planets, loading } = useAppSelector(
         (state) => state.reducerPlanets
     );
 
-    // useRef для изменяемых значений, которые не вызывают ререндер
     const startX = useRef<number>(0);
     const startY = useRef<number>(0);
     const initialOffsetX = useRef<number>(0);
@@ -39,7 +36,6 @@ const Map: React.FC = () => {
         }
     }, [spaceMapRef, offsetX, offsetY, scale]);
 
-    // Вызываем updateMapTransform при изменении соответствующих состояний
     useEffect(() => {
         updateMapTransform();
     }, [updateMapTransform]);
@@ -62,9 +58,9 @@ const Map: React.FC = () => {
                 Math.min(maxScale, newScale)
             );
 
-            let newOffsetX =
+            const newOffsetX =
                 mouseX - (mouseX - offsetX) * (clampedScale / scale);
-            let newOffsetY =
+            const newOffsetY =
                 mouseY - (mouseY - offsetY) * (clampedScale / scale);
 
             const { clampedOffsetX, clampedOffsetY } = clampOffsets(
@@ -91,11 +87,6 @@ const Map: React.FC = () => {
 
     const handleMouseDown = useCallback(
         (e: MouseEvent) => {
-            // Проверяем, если клик был на планете
-            const isPlanetClick =
-                e.target instanceof HTMLElement &&
-                e.target.classList.contains("icon"); // Замените 'planet-class' на реальный класс планеты
-
             setIsDragging(true);
             startX.current = e.clientX;
             startY.current = e.clientY;
@@ -108,24 +99,13 @@ const Map: React.FC = () => {
         [offsetX, offsetY, setIsDragging, spaceMapRef]
     );
 
-    // const handleMouseDown = useCallback((e: MouseEvent) => {
-    //     setIsDragging(true);
-    //     startX.current = e.clientX;
-    //     startY.current = e.clientY;
-    //     initialOffsetX.current = offsetX;
-    //     initialOffsetY.current = offsetY;
-    //     if (spaceMapRef.current) {
-    //         spaceMapRef.current.style.cursor = 'grabbing';
-    //     }
-    // }, [offsetX, offsetY, setIsDragging, spaceMapRef]);
-
     const handleMouseMove = useCallback(
         (e: MouseEvent) => {
             if (isDragging) {
                 const deltaX = e.clientX - startX.current;
                 const deltaY = e.clientY - startY.current;
-                let newOffsetX = initialOffsetX.current + deltaX;
-                let newOffsetY = initialOffsetY.current + deltaY;
+                const newOffsetX = initialOffsetX.current + deltaX;
+                const newOffsetY = initialOffsetY.current + deltaY;
 
                 const { clampedOffsetX, clampedOffsetY } = clampOffsets(
                     newOffsetX,
@@ -147,7 +127,6 @@ const Map: React.FC = () => {
         }
     }, [setIsDragging, spaceMapRef]);
 
-    // Добавление и удаление слушателей событий
     useEffect(() => {
         const viewerElement = viewerRef.current;
         if (viewerElement) {
@@ -195,15 +174,13 @@ const Map: React.FC = () => {
         viewerRef,
     ]);
 
-    // const dispatch = useAppDispatch();
-
     return (
         <div id={styles["viewer-container"]} ref={viewerRef}>
             <div id={styles["space-map"]} ref={spaceMapRef}>
                 <BorderComponent isVisible={isVisible} />
                 {!loading && planets
-                    ? planets.map((planet, index) => (
-                          <Planet key={index} planet={planet} />
+                    ? planets.map((planet) => (
+                          <Planet key={planet._id} planet={planet} />
                       ))
                     : null}
             </div>

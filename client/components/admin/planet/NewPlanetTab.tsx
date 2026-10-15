@@ -1,19 +1,20 @@
-// NewPlanetTab.tsx
 import React, { useState } from "react";
-import { PlanetFormFields, PlanetFormFieldsProps } from "./PlanetFormFields";
+import { toast } from "sonner";
+import { PlanetFormFields } from "./PlanetFormFields";
 import { Button } from "@/components/ui/button";
+import { imageError } from "@/lib/imageFile";
 
 export interface PlanetData {
     id?: string;
     name: string;
     ingamePosition: string;
-    description?: string;
+    description: string;
     left: string;
     top: string;
     size: string;
     pic: File | null;
-    legion1?: string;
-    legion2?: string;
+    legion1: string;
+    legion2: string;
 }
 
 interface NewPlanetTabProps {
@@ -23,41 +24,46 @@ interface NewPlanetTabProps {
 
 export const NewPlanetTab: React.FC<NewPlanetTabProps> = ({ initialValues, onSubmit }) => {
     const [values, setValues] = useState<PlanetData>(initialValues);
+    const [formKey, setFormKey] = useState(0);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-
-        // Проверяем, что target - это input и есть files (то есть input type="file")
-        const files = (e.target as HTMLInputElement).files;
+        const file = (e.target as HTMLInputElement).files?.[0] ?? null;
 
         setValues(prev => ({
             ...prev,
-            [name]: files && files.length > 0 ? files[0] : value,
+            [name]: name === "pic" ? file : value,
         }));
     };
-
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!values.name.trim()) {
+            toast.error("Укажите название планеты");
+            return;
+        }
+        if (values.legion1 && values.legion1 === values.legion2) {
+            toast.error("Выберите два разных легиона");
+            return;
+        }
+        const picError = values.pic && imageError(values.pic);
+        if (picError) {
+            toast.error(picError);
+            return;
+        }
+
         const formData = new FormData();
-
-        for (const key in values) {
-            const typedKey = key as keyof PlanetData;
-            const value = values[typedKey];
-
-
-            if (value instanceof File) {
-                formData.append(key, value);
-            } else if (Array.isArray(value)) {
-                value.forEach((file) => {
-                    if (file instanceof File) {
-                        formData.append(key, file);
-                    }
-                });
-            } else if (value !== undefined && value !== null) {
-                formData.append(key, String(value));
-            }
+        formData.append("name", values.name.trim());
+        formData.append("ingamePosition", values.ingamePosition);
+        formData.append("description", values.description);
+        formData.append("left", values.left);
+        formData.append("top", values.top);
+        formData.append("size", values.size);
+        formData.append("legion1", values.legion1);
+        formData.append("legion2", values.legion2);
+        if (values.pic) {
+            formData.append("pic", values.pic);
         }
 
         onSubmit(formData);
@@ -65,12 +71,17 @@ export const NewPlanetTab: React.FC<NewPlanetTabProps> = ({ initialValues, onSub
 
     const handleReset = () => {
         setValues(initialValues);
+        setFormKey(key => key + 1);
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-
-            <PlanetFormFields values={values} onChange={handleChange} />
+            <PlanetFormFields
+                key={formKey}
+                values={values}
+                onChange={handleChange}
+                isNew={!initialValues.id}
+            />
             <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={handleReset}>
                     Сбросить

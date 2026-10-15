@@ -21,24 +21,28 @@ import {
 } from "@/components/ui/tabs";
 import { PlanetData, NewPlanetTab } from "./planet/NewPlanetTab";
 import { useAppDispatch } from "@/hooks/useStore";
-import { createPlanet, fetchPlanets } from "@/lib/slices/planetSlices";
+import { createPlanet } from "@/lib/slices/planetSlices";
 import { LegionData, NewLegionTab } from "./legion/NewLegionTab";
-import { createLegion, fetchLegions } from "@/lib/slices/legionSlices";
+import { createLegion } from "@/lib/slices/legionSlices";
+import { refreshCatalog } from "@/lib/slices/refreshCatalog";
 import { toast } from "sonner";
 import { useState } from "react";
 
-const initialPlanetData: PlanetData = {
-    name: "планета",
-    ingamePosition: "в-0000",
-    description: "алипов, пере .ю ю .,пщкенгукшцуп.щывсбчпи,ьсмтиттмьсд",
-    left: "1000",
-    top: "1000",
-    size: "100",
+const emptyPlanet: PlanetData = {
+    name: "",
+    ingamePosition: "",
+    description: "",
+    left: "",
+    top: "",
+    size: "",
     pic: null,
+    legion1: "",
+    legion2: "",
 };
-const initialLegionData: LegionData = {
-    name: "легион",
-    description: "апапрвпа цукенгшщ мпирто мить дж ыва ывакеп вапе мит ю",
+
+const emptyLegion: LegionData = {
+    name: "",
+    description: "",
     icon: null,
 };
 
@@ -46,46 +50,27 @@ export function DrawerWithTabsAndForm() {
     const dispatch = useAppDispatch();
     const [isOpen, setIsOpen] = useState(false);
 
-  
     const handleSavePlanets = async (formData: FormData) => {
-        try {
-            const resultAction = await dispatch(createPlanet(formData));
-
-            if (createPlanet.fulfilled.match(resultAction)) {
-                toast.success("Планета успешно создана");
-                dispatch(fetchPlanets());
-                setIsOpen(false)
-
-
-            } else {
-                // Если ошибка
-                toast.error("Ошибка при создании планеты");
-            }
-        } catch (error) {
-            toast.error("Произошла ошибка сервера при создании ");
-        }
-    }
-    
-    const handleSaveLegions = async (formData: FormData) => {
-        try {
-            const resultAction = await dispatch(createLegion(formData));
-
-            if (createLegion.fulfilled.match(resultAction)) {
-                toast.success("Ордос успешно создана");
-                dispatch(fetchLegions());
-                setIsOpen(false)
-
-            } else {
-                // Если ошибка
-                toast.error("Ошибка при создании ордоса");
-            }
-        } catch (error) {
-            toast.error("Произошла ошибка сервера при создании ");
+        const result = await dispatch(createPlanet(formData));
+        if (createPlanet.fulfilled.match(result)) {
+            toast.success("Планета успешно создана");
+            setIsOpen(false);
+            dispatch(refreshCatalog());
+        } else {
+            toast.error(result.payload ?? "Ошибка при создании планеты");
         }
     };
-    
 
-
+    const handleSaveLegions = async (formData: FormData) => {
+        const result = await dispatch(createLegion(formData));
+        if (createLegion.fulfilled.match(result)) {
+            toast.success("Легион успешно создан");
+            setIsOpen(false);
+            dispatch(refreshCatalog());
+        } else {
+            toast.error(result.payload ?? "Ошибка при создании легиона");
+        }
+    };
 
     return (
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -98,19 +83,18 @@ export function DrawerWithTabsAndForm() {
                 </DrawerHeader>
 
                 <div className="flex-1 min-h-0">
-                    <Tabs defaultValue="legion" className="flex h-full">
-                        <TabsList className="flex flex-col ">
-                            <TabsTrigger value="planet" className="text-left">Планета</TabsTrigger>
-                            <TabsTrigger value="legion" className="text-left">Ордос</TabsTrigger>
+                    <Tabs defaultValue="planet" className="flex flex-col items-center h-full">
+                        <TabsList>
+                            <TabsTrigger value="planet">Планета</TabsTrigger>
+                            <TabsTrigger value="legion">Легион</TabsTrigger>
                         </TabsList>
 
-                        <div className="flex-1 flex justify-center items-start overflow-y-auto p-6 min-h-0">
+                        <div className="flex-1 flex w-full justify-center items-start overflow-y-auto p-6 min-h-0">
                             <TabsContent value="planet" className="w-full  max-w-xl">
-                                <NewPlanetTab initialValues={initialPlanetData} onSubmit={handleSavePlanets} />
+                                <NewPlanetTab initialValues={emptyPlanet} onSubmit={handleSavePlanets} />
                             </TabsContent>
                             <TabsContent value="legion" className="w-full max-w-xl">
-                                <NewLegionTab initialValues={initialLegionData} onSubmit={handleSaveLegions} />
-
+                                <NewLegionTab initialValues={emptyLegion} onSubmit={handleSaveLegions} />
                             </TabsContent>
                         </div>
                     </Tabs>
@@ -122,7 +106,6 @@ export function DrawerWithTabsAndForm() {
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>
-
         </Drawer>
     );
 }

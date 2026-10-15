@@ -1,29 +1,28 @@
 .marquee {
             width: 82vw;
-  overflow: hidden;          // Скрываем выходящий за пределы текст
-  height: 40%;              // Высота компонента (можно изменить)
+  overflow: hidden;
+  height: 40%;
   display: flex;
   align-items: center;  
   pointer-events: auto;
         user-select: none;
         -webkit-user-select: none;
-        -webkit-user-drag: none;     // Вертикальное центрирование текста
+        -webkit-user-drag: none;
 }
 
 .track {
   display: flex;
-  width: max-content;        // Ширина по содержимому
+  width: max-content;
   animation: scrollLeft 100s linear infinite;
 }
 
 .text {
-  white-space: nowrap;       // Запрещаем перенос текста
-  padding-right: 50px;       // Отступ между повторениями текста
+  white-space: nowrap;
+  padding-right: 50px;
   font-size: 1.5vw;
   color: rgb(196, 234, 84);
 }
 
-/* Анимация сдвига текста слева направо */
 @keyframes scrollLeft {
   0% {
     transform: translateX(0);

@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+
 const formSchema = z.object({
     username: z
         .string()
@@ -34,7 +35,7 @@ const formSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
     password: z
         .string()
-        .min(6, { message: "Password must be at least 8 characters long" }),
+        .min(8, { message: "Password must be at least 8 characters long" }),
 });
 
 export function SignUpForm({
@@ -61,10 +62,8 @@ export function SignUpForm({
                 password: values.password,
                 name: values.username,
             });
-            if ((result as any)?.error) {
-                throw new Error(
-                    (result as any).error?.message || "Sign-up failed"
-                );
+            if (result.error) {
+                throw new Error(result.error.message || "Sign-up failed");
             }
             if (!result.data?.token) {
                 setEmailSent(true);
@@ -169,12 +168,6 @@ export function SignUpForm({
                                         <Label htmlFor="password">
                                             Password
                                         </Label>
-                                        <a
-                                            href="#"
-                                            className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                                        >
-                                            Forgot your password?
-                                        </a>
                                     </div>
                                     <FormField
                                         control={form.control}

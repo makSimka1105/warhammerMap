@@ -1,17 +1,15 @@
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { TabType } from "../search/databaseTablet";
-import { Button } from "../ui/button";
 import styles from "@/app/styles/tablet.module.scss";
 import { SearchLine } from "./searchLine";
 import { authClient } from "@/lib/auth-client";
 import { DrawerWithTabsAndForm } from "../admin/createObject";
-import { LogOut } from "lucide-react";
 import { Logout } from "../auth/logout";
-type AdminControlsProps = {
+
+type TabletControlsProps = {
   activeTab: TabType;
   setActiveTab: Dispatch<SetStateAction<TabType>>;
-
   countPlanets: number;
   countLegions: number;
 };
@@ -21,16 +19,12 @@ export default function TabletControls({
   setActiveTab,
   countPlanets,
   countLegions,
-}: AdminControlsProps) {
-
-
+}: TabletControlsProps) {
   const { data: session } = authClient.useSession();
   const admin = useIsAdmin();
 
   return (
     <div className={styles.tabletControls}>
-      {/* <div className={styles.buffer}></div> */}
-
       <SearchLine
         placeholder="Поиск..."
         activeTab={activeTab}
@@ -44,7 +38,6 @@ export default function TabletControls({
       {session && <div className="right-0 z-10">
         <Logout />
       </div>}
-
     </div>
   );
 }

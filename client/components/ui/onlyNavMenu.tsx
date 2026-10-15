@@ -1,43 +1,21 @@
-
 "use client";
 import React, { useState, useCallback } from "react";
 import styles from "@/app/styles/burgerMenu.module.scss";
 import { useRouter } from "next/navigation";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 
-
-const OnlyNavMenu: React.FC = (
-   
-) => {
+const OnlyNavMenu: React.FC = () => {
     const [isActive, setIsActive] = useState(false);
     const router = useRouter();
-   
 
     const handleRouter = useCallback(
-        (path: string) => {
-            try {
-                router.push(path);
-            } catch (error) {
-                console.error("Navigation error:", error);
-                // Fallback: try to navigate using window.location if router fails
-                try {
-                    window.location.href = path;
-                } catch (fallbackError) {
-                    console.error(
-                        "Fallback navigation also failed:",
-                        fallbackError
-                    );
-                }
-            }
-        },
+        (path: string) => router.push(path),
         [router]
     );
 
     const toggleMenu = useCallback(() => {
         setIsActive(!isActive);
     }, [isActive]);
-
-    
 
     const handleKeyDown = useCallback(
         (event: React.KeyboardEvent, action: () => void) => {
@@ -53,14 +31,12 @@ const OnlyNavMenu: React.FC = (
         {
             id: "home",
             label: "Navigate to home",
-            path: "/",
             action: () => handleRouter("/"),
         },
 
         {
             id: "admin",
             label: "Navigate to admin dashboard",
-            path: "/login",
             action: () => handleRouter("/login"),
         },
     ];
