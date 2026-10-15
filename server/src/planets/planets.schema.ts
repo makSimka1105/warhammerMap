@@ -1,37 +1,32 @@
-
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
 export type PlanetDocument = HydratedDocument<Planet>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Planet {
-  @Prop()
+  @Prop({ required: true })
   name: string;
-  @Prop()
+  @Prop({ required: true })
   size: number;
 
-  @Prop()
+  @Prop({ required: true })
   top: number;
-  @Prop()
+  @Prop({ required: true })
   left: number;
   @Prop()
   ingamePosition: string;
-  @Prop()
+  @Prop({ required: true })
   pic: string;
 
   @Prop()
   description: string;
 
-  @Prop({type:[{type:Types.ObjectId,ref:'Legion'}]})
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Legion' }], default: [] })
   legions: Types.ObjectId[];
 
-  @Prop({type:[{type:Types.ObjectId,ref:'Event'}]})
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Event' }], default: [] })
   events: Types.ObjectId[];
-
-
 }
 
 export const PlanetSchema = SchemaFactory.createForClass(Planet);
-
-

@@ -13,28 +13,20 @@ export class LegionService {
     constructor(@InjectModel(Legion.name) private legionModel: Model<LegionDocument>,
         @InjectModel(Planet.name) private planetModel: Model<PlanetDocument>,
         private fileService: FileService,
-        // private planetService: PlanetService,
     ) { }
 
     async create(dto: CreateLegionDto, icon): Promise<Legion> {
-        const legionIconPath = await this.fileService.uploadFile(icon);
-
-
+        const iconName = await this.fileService.uploadFile(icon);
         try {
-            return await this.legionModel.create({
-                ...dto,
-                planets: [],
-                icon: legionIconPath
-            })
+            return await this.legionModel.create({ ...dto, planets: [], icon: iconName })
         } catch (error) {
-            await this.fileService.deleteFile(legionIconPath)
+            await this.fileService.deleteFile(iconName)
             throw error
         }
     }
 
     async getAll(): Promise<Legion[]> {
-        const legions = await this.legionModel.find().exec();
-        return legions
+        return this.legionModel.find().exec();
     }
 
     async getOne(id: string): Promise<Legion | null> {
@@ -48,144 +40,44 @@ export class LegionService {
         }
     }
 
-    async delete(id: string): Promise<{ id: string | null, icon: string | void }> {
-        handleInvalidIdError(id)
-        try {
-            const deleted = await this.legionModel.findByIdAndDelete(id).exec();
-            if (!deleted) {
-                handleObjNotFound(deleted, id);
-                return { id: null, icon: '' }; // Если объект не найден, возвращаем null
-            }
-
-            const deletedFile = await this.fileService.deleteFile(deleted.icon)
-             await Promise.all(deleted.planets.map(async link => {
-
-                await this.planetModel.findByIdAndUpdate(link, { $pull: { 'legions': id } },
-                    { new: true, runValidators: true })
-            }))
-            return { id: deleted._id.toString(), icon: deletedFile }
-        } catch (error) {
-            handleGeneralServerError(error)
+    async delete(id: string): Promise<{ id: string }> {
+        const legion = await this.legionModel.findById(id).exec();
+        if (!legion) {
+            throw new NotFoundException(`Object with id ${id} not found`);
         }
-    }
-    async deletePlanet(id: any , objectId: string ): Promise<{ id: string | null }> {
-        handleInvalidIdError(id);
-        handleInvalidIdError(objectId);
-        // if  (typeof id === 'string'){
-        //     return { id: id }
-        // }
-
-
-        try {
-            const update = { $pull: { 'planets': objectId } }; // Используем $pull для удаления элемента из массива
-            const updatedLegion = await this.legionModel.findByIdAndUpdate(id, update, { new: true, runValidators: true }).exec();
-            // handleObjNotFound(updatedLegion, id);
-            return { id: updatedLegion ? updatedLegion._id.toString() : null };
-        } catch (error) {
-            handleGeneralServerError(error);
-        }
+        await this.planetModel.updateMany({ legions: legion._id }, { $pull: { legions: legion._id } })
+        await this.legionModel.deleteOne({ _id: legion._id })
+        await this.fileService.deleteFile(legion.icon)
+        return { id: legion._id.toString() }
     }
 
-
-
-
-    async deleteAll(): Promise<Array<{ id: string | null }>> {
-        try {
-            const legions = await this.legionModel.find().exec();
-            const deletedIds = await Promise.all(legions.map(async (legion) => {
-                if (!legion._id) {
-                    handleInvalidIdError(legion._id);
-                    return { id: null };
-                }
-                return await this.delete(legion.id);
-            }))
-            return deletedIds;
-        } catch (error) {
-            handleGeneralServerError(error)
-        }
+    async deleteAll(): Promise<Array<{ id: string }>> {
+        const legions = await this.legionModel.find().exec();
+        await this.planetModel.updateMany({}, { $set: { legions: [] } })
+        await this.legionModel.deleteMany({})
+        await this.fileService.deleteFiles(legions.map((legion) => legion.icon))
+        return legions.map((legion) => ({ id: legion._id.toString() }))
     }
 
-
-    async update(id: string, dto: UpdateLegionDto, icon: Express.Multer.File | null): Promise<Legion | null> {
-        handleInvalidIdError(id);
-        try {
-
-            const legion = await this.legionModel.findById(id);
-            if (!legion) {
-                throw new NotFoundException(`Legion with id ${id} not found`);
-            }
-
-            // Загрузить новую иконку, если она есть, иначе оставить старую
-            const iconPath = icon ? await this.fileService.uploadFile(icon) : legion.icon;
-
-
-
-            const updatedLegion = await this.legionModel.findByIdAndUpdate(
-                id,
-                {
-
-                    $set: {
-                        'name': dto.name ?? legion.name,
-                        'description': dto.description ?? legion.description,
-                        'icon': iconPath,
-                    }
-                }
-                , { new: true, runValidators: true }
-            )
-            handleObjNotFound(updatedLegion, id)
-            if (icon && legion.icon) {
-                await this.fileService.deleteFile(legion.icon);
-            }
-            return updatedLegion;
-        } catch (error) {
-            handleGeneralServerError(error);
+    async update(id: string, dto: UpdateLegionDto, icon: Express.Multer.File | null): Promise<Legion> {
+        const legion = await this.legionModel.findById(id);
+        if (!legion) {
+            throw new NotFoundException(`Legion with id ${id} not found`);
         }
+        const oldIcon = legion.icon;
+        const newIcon = icon ? await this.fileService.uploadFile(icon) : null;
+        legion.name = dto.name ?? legion.name;
+        legion.description = dto.description ?? legion.description;
+        legion.icon = newIcon ?? oldIcon;
+        try {
+            await legion.save();
+        } catch (error) {
+            await this.fileService.deleteFile(newIcon)
+            throw error
+        }
+        if (newIcon) {
+            await this.fileService.deleteFile(oldIcon);
+        }
+        return legion;
     }
-
-
-    // async addPlanet(id: ObjectId | string, dto:Partial<CreateLegionDto>): Promise<Legion | null>{
-    //     handleInvalidIdError(id);
-    //     try {
-    //         const legion =await this.legionModel.findById(id).exec()
-    //         handleObjNotFound(legion, id)
-    //         const updatedLegion = await this.legionModel.findByIdAndUpdate(
-    //             id,
-    //             {
-
-    //                 $push:{
-    //                 'planets':dto.planets
-    //                 },
-    //             },
-    //             { new: true, runValidators: true }
-    //         )
-    //         return updatedLegion
-    //     } catch (error) {
-    //         handleGeneralServerError(error)
-    //     }
-    // }
-
-
-    // async deletePlanet(id: ObjectId | string, dto:Partial<CreateLegionDto>): Promise<Legion | null>{
-    //     handleInvalidIdError(id);
-    //     try {
-    //         const legion =await this.legionModel.findById(id).exec()
-    //         handleObjNotFound(legion, id)
-    //         const updatedLegion = await this.legionModel.findByIdAndUpdate(
-    //             id,
-    //             {
-
-    //                 $pull:{
-    //                 'planets':dto.planets
-    //                 },
-    //             },
-    //             { new: true, runValidators: true }
-    //         )
-    //         return updatedLegion
-    //     } catch (error) {
-    //         handleGeneralServerError(error)
-    //     }
-    // }
-
-
-
 }

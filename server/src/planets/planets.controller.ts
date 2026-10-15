@@ -15,8 +15,6 @@ export class PlanetController {
     ], imageUploadOptions))
     create(@Body() dto: CreatePlanetDto, @UploadedFiles() files: { pic?: Express.Multer.File[] }) {
         const pic = files?.pic?.[0] ?? null;
-        // const images = files.images;
-
         return this.planetService.create(dto, pic);
     }
 
@@ -44,11 +42,10 @@ export class PlanetController {
     @Put(':id')
     @UseInterceptors(FileFieldsInterceptor([{ name: 'pic', maxCount: 1 }], imageUploadOptions))
     update(
-        @Param('id', ParseObjectIdPipe) id: string, // или ObjectId в зависимости от используемого типа
+        @Param('id', ParseObjectIdPipe) id: string,
         @Body() updatePlanetDto: UpdatePlanetDto,
         @UploadedFiles() files: { pic?: Express.Multer.File[] }
     ) {
-        // Вызов метода сервиса для обновления
         const pic = files?.pic?.[0] ?? null;
 
         return this.planetService.updatePlanet(id, updatePlanetDto, pic);

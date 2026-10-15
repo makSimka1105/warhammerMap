@@ -38,12 +38,4 @@ export class EventController{
     deleteAll() {
         return this.eventService.deleteAll()
     }
-
-
-
-//     @Put(':id')
-//     update(@Param('id', ParseObjectIdPipe) id: string,@Body() dto:CreateEventDto){
-//         return this.eventService.updateMain(id,dto)
-//     }
-
 }

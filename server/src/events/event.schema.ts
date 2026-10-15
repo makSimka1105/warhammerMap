@@ -3,22 +3,19 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type EventDocument = HydratedDocument<Event>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Event {
-
-  @Prop()
+  @Prop({ required: true })
   name: string;
   @Prop()
   description: string;
-  @Prop()
+  @Prop({ type: [String], default: [] })
   shots: string[];
   @Prop()
   link: string;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Planet' }] })
+  @Prop({ type: Types.ObjectId, ref: 'Planet', required: true, index: true })
   place: Types.ObjectId;
-
-
 }
-export const EventSchema = SchemaFactory.createForClass(Event);
 
+export const EventSchema = SchemaFactory.createForClass(Event);

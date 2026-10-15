@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -37,9 +37,10 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply((req, res, next) => {
-        res.setHeader('Cache-Control', 'no-store'); // Отключить кэширование
+        res.setHeader('Cache-Control', 'no-store');
         next();
       })
-      .forRoutes('*'); // Применить ко всем маршрутам
+      .exclude({ path: 'files/:name', method: RequestMethod.GET })
+      .forRoutes('*');
   }
 }

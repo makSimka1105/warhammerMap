@@ -56,6 +56,14 @@ describe('FileService and FilesController on GridFS', () => {
         }
     });
 
+    it('removes already stored files when one upload in a batch fails', async () => {
+        const before = await connection.db!.collection('images.files').countDocuments();
+
+        await expect(service.uploadFiles([PNG, { ...PNG, mimetype: 'image/gif' }, PNG])).rejects.toBeInstanceOf(BadRequestException);
+
+        expect(await connection.db!.collection('images.files').countDocuments()).toBe(before);
+    });
+
     it('deletes by stored value and tolerates repeats', async () => {
         const name = await service.uploadFile(PNG);
 

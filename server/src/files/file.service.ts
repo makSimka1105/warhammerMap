@@ -41,8 +41,15 @@ export class FileService {
         return name;
     }
 
-    uploadFiles(files: Array<{ mimetype: string; buffer: Buffer }>): Promise<string[]> {
-        return Promise.all(files.map((file) => this.uploadFile(file)));
+    async uploadFiles(files: Array<{ mimetype: string; buffer: Buffer }>): Promise<string[]> {
+        const uploads = await Promise.allSettled(files.map((file) => this.uploadFile(file)));
+        const stored = uploads.flatMap((upload) => (upload.status === 'fulfilled' ? [upload.value] : []));
+        const failed = uploads.find((upload) => upload.status === 'rejected');
+        if (failed) {
+            await this.deleteFiles(stored);
+            throw failed.reason;
+        }
+        return stored;
     }
 
     async deleteFile(stored: string | undefined | null): Promise<void> {

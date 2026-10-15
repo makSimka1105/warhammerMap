@@ -3,20 +3,17 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type LegionDocument = HydratedDocument<Legion>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Legion {
-
-  @Prop()
+  @Prop({ required: true })
   name: string;
   @Prop()
   description: string;
-  @Prop()
+  @Prop({ required: true })
   icon: string;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Planet' }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Planet' }], default: [] })
   planets: Types.ObjectId[];
-  
-
 }
 
 export const LegionSchema = SchemaFactory.createForClass(Legion);

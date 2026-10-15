@@ -28,7 +28,7 @@ describe('create removes uploaded files when the document insert fails', () => {
     it('planet: deletes the pic and rethrows the insert error', async () => {
         const files = fileServiceMock();
         const planetModel = { create: jest.fn().mockRejectedValue(INSERT_ERROR) };
-        const service = new PlanetService(planetModel as any, {} as any, {} as any, {} as any, files as any);
+        const service = new PlanetService(planetModel as any, {} as any, {} as any, files as any);
 
         await expect(service.create({ name: 'Macragge' } as any, PNG)).rejects.toBe(INSERT_ERROR);
 
