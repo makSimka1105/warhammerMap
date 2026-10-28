@@ -1,9 +1,11 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Test } from '@nestjs/testing';
-import { Connection } from 'mongoose';
+import { Connection, Types } from 'mongoose';
 import * as request from 'supertest';
 import { PlanetService } from 'src/planets/planets.service';
+import { EventService } from 'src/events/event.service';
+import { UpdateEventDto } from 'src/dto/update-event.dto';
 import { ObjectModule } from 'src/objects.module';
 import { checkIntegrity } from 'src/scripts/db-check';
 
@@ -16,6 +18,7 @@ describe('relations and images stay consistent', () => {
     let app: INestApplication;
     let connection: Connection;
     let planets: PlanetService;
+    let events: EventService;
     const http = () => request(app.getHttpServer());
 
     const createLegion = async (name: string) =>
@@ -32,6 +35,9 @@ describe('relations and images stay consistent', () => {
     };
     const issues = async () => Object.values(await checkIntegrity(connection)).flat();
     const countFiles = () => connection.db!.collection('images.files').countDocuments();
+    const pipe = new ValidationPipe({ whitelist: true, transform: true });
+    const updateEvent = async (id: string, body: object) =>
+        JSON.parse(JSON.stringify(await events.update(id, await pipe.transform(body, { type: 'body', metatype: UpdateEventDto }))));
 
     beforeAll(async () => {
         const module = await Test.createTestingModule({ imports: [MongooseModule.forRoot(MONGO_URL), ObjectModule] }).compile();
@@ -39,6 +45,7 @@ describe('relations and images stay consistent', () => {
         await app.init();
         connection = module.get(getConnectionToken());
         planets = module.get(PlanetService);
+        events = module.get(EventService);
     });
 
     beforeEach(async () => {
@@ -120,6 +127,47 @@ describe('relations and images stay consistent', () => {
         expect(updated).toEqual(listed);
         expect(listed.events[0]).toMatchObject({ name: 'Landing', place: planet._id });
         expect(Object.keys(planet).sort()).toEqual(Object.keys(listed).sort());
+    });
+
+    it('partial event update keeps the fields that were not sent', async () => {
+        const planet = await createPlanet('Fenris');
+        const event = (await http().post('/events').field('name', 'Hunt').field('description', 'Old')
+            .field('link', 'https://example.invalid/hunt').field('place', planet._id).expect(201)).body;
+
+        const updated = await updateEvent(event._id, { name: 'Great Hunt' });
+
+        expect(updated).toMatchObject({ name: 'Great Hunt', description: 'Old', link: 'https://example.invalid/hunt', place: planet._id });
+        expect((await http().get(`/events/${event._id}`)).body).toEqual(updated);
+    });
+
+    it('updates an event and moves its planet relation', async () => {
+        const first = await createPlanet('First');
+        const second = await createPlanet('Second');
+        const stale = await createPlanet('Stale');
+        const event = (await http().post('/events').field('name', 'Landing').field('place', first._id)
+            .attach('shots', PNG, { filename: 's.png', contentType: 'image/png' }).expect(201)).body;
+        await connection.db!.collection('planets').updateOne({ name: 'Stale' }, { $set: { events: [new Types.ObjectId(event._id)] } });
+        const files = await countFiles();
+
+        const updated = await updateEvent(event._id, { description: 'Updated', place: second._id, shots: ['x.png'] });
+
+        expect(updated).toMatchObject({ name: 'Landing', description: 'Updated', place: second._id });
+        expect(updated.shots).toEqual(event.shots);
+        expect(await countFiles()).toBe(files);
+        expect((await http().get(`/planets/${first._id}`)).body.events).toEqual([]);
+        expect((await http().get(`/planets/${stale._id}`)).body.events).toEqual([]);
+        expect((await http().get(`/planets/${second._id}`)).body.events[0]._id).toBe(event._id);
+        expect(await issues()).toEqual([]);
+    });
+
+    it('answers 404 when updating an unknown event or moving it to an unknown planet', async () => {
+        const planet = await createPlanet('Terra');
+        const event = (await http().post('/events').field('name', 'Siege').field('place', planet._id).expect(201)).body;
+        const missing = '0123456789abcdef01234567';
+
+        await http().put(`/events/${missing}`).send({ name: 'Ghost' }).expect(404);
+        await http().put(`/events/${event._id}`).send({ place: missing }).expect(404);
+        expect((await http().get(`/events/${event._id}`)).body).toMatchObject({ name: 'Siege', place: planet._id });
     });
 
     it('full lifecycle leaves no dangling refs or orphan files', async () => {

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { CreateEventDto } from "src/dto/create-event.dto";
+import { UpdateEventDto } from "src/dto/update-event.dto";
 import { FileService } from "src/files/file.service";
 import { Planet, PlanetDocument } from "src/planets/planets.schema";
 import { Event, EventDocument } from "./event.schema";
@@ -47,6 +48,26 @@ export class EventService {
         const event = await this.eventModel.findById(id).exec();
         handleObjNotFound(event, id)
         return event!
+    }
+
+    async update(id: string, dto: UpdateEventDto): Promise<Event> {
+        const event = await this.eventModel.findById(id).exec();
+        handleObjNotFound(event, id);
+
+        const nextPlace = dto.place ?? event!.place.toString();
+        const place = await this.planetModel.findById(nextPlace).exec();
+        if (!place) {
+            throw new NotFoundException(`Planet ${nextPlace} not found`);
+        }
+
+        const changes = Object.entries(dto).filter(([, value]) => value !== undefined);
+        Object.assign(event!, Object.fromEntries(changes));
+        event!.place = place._id;
+        await event!.save();
+
+        await this.planetModel.updateMany({ events: event!._id, _id: { $ne: place._id } }, { $pull: { events: event!._id } });
+        await this.planetModel.updateOne({ _id: place._id }, { $addToSet: { events: event!._id } });
+        return event!;
     }
 
     async deleteOne(id: string): Promise<{ id: string }> {

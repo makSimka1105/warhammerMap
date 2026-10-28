@@ -3,6 +3,7 @@ import { FileFieldsInterceptor } from "@nestjs/platform-express"
 import { ParseObjectIdPipe } from "src/common/parse-object-id.pipe";
 import { imageUploadOptions } from "src/files/upload.options"
 import { CreateEventDto } from "src/dto/create-event.dto"
+import { UpdateEventDto } from "src/dto/update-event.dto"
 import { EventService } from "./event.service"
 
 
@@ -27,6 +28,10 @@ export class EventController{
     getOne(@Param('id', ParseObjectIdPipe) id: string){
         return this.eventService.getOne(id)
         
+    }
+    @Put(':id')
+    update(@Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateEventDto) {
+        return this.eventService.update(id, dto)
     }
     @Delete(':id')
     delete(@Param('id', ParseObjectIdPipe) id: string){

@@ -149,7 +149,7 @@ cd client && npx tsc --noEmit && npm run build
 | GET, POST | `/legions` | файл `icon` |
 | GET, PUT, DELETE | `/legions/:id` | удаление убирает легион со всех планет |
 | GET, POST | `/events` | до 4 файлов `shots`, `place` это id планеты |
-| GET, DELETE | `/events/:id` | |
+| GET, PUT, DELETE | `/events/:id` | PUT меняет поля события и переносит его на другую планету, снимки не трогает |
 | GET | `/files/:name` | изображение из GridFS с immutable-кэшем |
 
 ## Деплой
