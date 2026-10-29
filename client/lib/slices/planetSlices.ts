@@ -83,6 +83,20 @@ export const deleteEvent = createAsyncThunk<
     }
 });
 
+export const updateEvent = createAsyncThunk<
+    void,
+    { id: string; changes: { name?: string; description?: string; link?: string; place?: string } },
+    { rejectValue: string }
+>("events/updateEvent", async ({ id, changes }, { rejectWithValue }) => {
+    try {
+        await api.put(`${eventsUrl}/${id}`, changes);
+    } catch (error) {
+        return rejectWithValue(
+            apiErrorMessage(error, "Ошибка при обновлении ивента")
+        );
+    }
+});
+
 interface PlanetsState {
     planets: IPlanet[] | null;
     loading: boolean;

@@ -1,11 +1,13 @@
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import styles from "@/app/styles/scrollable.module.scss";
 import { IEvent } from "@/app/types/event";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import { useMap } from "@/app/context/mapContext";
 import { ImageGridPreview } from "../ui/ImageGridPreview";
-import { deleteEvent, fetchPlanets } from "@/lib/slices/planetSlices";
+import { deleteEvent, updateEvent } from "@/lib/slices/planetSlices";
+import { refreshCatalog } from "@/lib/slices/refreshCatalog";
+import { EventEditDrawer } from "../admin/EventEditDrawer";
 import { toast } from "sonner";
 import { fileUrl } from "@/lib/fileUrl";
 
@@ -27,6 +29,7 @@ const ScrollableBlockColumn: React.FC<ScrollableBlockColumnProps> = ({
   const { setCurrentPlanet } = useMap();
   const admin = useIsAdmin();
   const dispatch = useAppDispatch();
+  const [editingEvent, setEditingEvent] = useState<IEvent | null>(null);
 
   const currentPlanets = useMemo(() => {
     if (!planets || !planetslinks) return [];
@@ -37,10 +40,21 @@ const ScrollableBlockColumn: React.FC<ScrollableBlockColumnProps> = ({
     const result = await dispatch(deleteEvent(id));
     if (deleteEvent.fulfilled.match(result)) {
       toast.success("Ивент удалён");
-      dispatch(fetchPlanets());
+      dispatch(refreshCatalog());
     } else {
       toast.error(result.payload ?? "Ошибка при удалении ивента");
     }
+  };
+
+  const handleEditEvent = async (id: string, changes: { name: string; description: string; link: string; place: string }) => {
+    const result = await dispatch(updateEvent({ id, changes }));
+    if (updateEvent.fulfilled.match(result)) {
+      toast.success("Ивент обновлён");
+      dispatch(refreshCatalog());
+      return true;
+    }
+    toast.error(result.payload ?? "Ошибка при обновлении ивента");
+    return false;
   };
 
   return (
@@ -102,9 +116,10 @@ const ScrollableBlockColumn: React.FC<ScrollableBlockColumnProps> = ({
               </button>
             )}
             {admin && (
-              <button className="text-red-600" onClick={() => handleDeleteEvent(event._id)}>
-                удалить
-              </button>
+              <div>
+                <button className="text-blue-600 mr-2" onClick={() => setEditingEvent(event)}>изменить</button>
+                <button className="text-red-600" onClick={() => handleDeleteEvent(event._id)}>удалить</button>
+              </div>
             )}
             <div className={styles.border}></div>
           </div>
@@ -114,6 +129,7 @@ const ScrollableBlockColumn: React.FC<ScrollableBlockColumnProps> = ({
           <p>данные о событиях отсутствуют</p>
         </div>
       )}
+      {admin && <EventEditDrawer event={editingEvent} planets={planets} onClose={() => setEditingEvent(null)} onSave={handleEditEvent} />}
     </div>
   );
 };
