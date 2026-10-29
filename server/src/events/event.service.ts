@@ -1,12 +1,16 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, PayloadTooLargeException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { CreateEventDto } from "src/dto/create-event.dto";
 import { UpdateEventDto } from "src/dto/update-event.dto";
 import { FileService } from "src/files/file.service";
 import { Planet, PlanetDocument } from "src/planets/planets.schema";
 import { Event, EventDocument } from "./event.schema";
 import { handleObjNotFound } from "src/error-holder";
+
+const EXPORT_LIMIT = 10000;
+
+type ExportedEvent = Event & { _id: Types.ObjectId; createdAt: Date; updatedAt: Date };
 
 
 @Injectable()
@@ -42,6 +46,40 @@ export class EventService {
 
     async getAll(): Promise<Event[]> {
         return this.eventModel.find().exec()
+    }
+
+    async exportAll() {
+        if (await this.eventModel.countDocuments().exec() > EXPORT_LIMIT) {
+            throw new PayloadTooLargeException('Too many events for export');
+        }
+        const events = await this.eventModel.find().sort({ createdAt: 1, _id: 1 }).lean<ExportedEvent[]>().exec();
+        const places = await this.planetModel.find({ _id: { $in: events.map((event) => event.place) } }).lean().exec();
+        const placeById = new Map(places.map((place) => [place._id.toString(), place]));
+        return {
+            exportedAt: new Date().toISOString(),
+            events: events.map((event) => {
+                const place = placeById.get(event.place.toString());
+                return {
+                    id: event._id.toString(),
+                    name: event.name,
+                    description: event.description ?? null,
+                    link: event.link ?? null,
+                    shots: event.shots ?? [],
+                    place: place ? {
+                        id: place._id.toString(),
+                        name: place.name,
+                        size: place.size,
+                        top: place.top,
+                        left: place.left,
+                        ingamePosition: place.ingamePosition ?? null,
+                        pic: place.pic ?? null,
+                        description: place.description ?? null,
+                    } : null,
+                    createdAt: event.createdAt.toISOString(),
+                    updatedAt: event.updatedAt.toISOString(),
+                };
+            }),
+        };
     }
 
     async getOne(id: string): Promise<Event> {

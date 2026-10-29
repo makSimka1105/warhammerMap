@@ -1,5 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { REQUIRE_ADMIN } from './admin.decorator';
 
 const READ_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
@@ -9,9 +11,12 @@ interface Session {
 
 @Injectable()
 export class AdminGuard implements CanActivate {
+    constructor(private reflector: Reflector) {}
+
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest<Request>();
-        if (READ_METHODS.includes(req.method)) return true;
+        const required = this.reflector.getAllAndOverride<boolean>(REQUIRE_ADMIN, [context.getHandler(), context.getClass()]);
+        if (READ_METHODS.includes(req.method) && !required) return true;
 
         const cookie = req.headers.cookie;
         if (!cookie) throw new UnauthorizedException();
